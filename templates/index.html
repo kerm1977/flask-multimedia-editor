@@ -385,6 +385,15 @@
                         <h5 class="m-0 fw-bold"><i class="bi bi-music-note-beamed me-2"></i>Editor de Audio</h5>
                         <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
                     </div>
+                    <div class="d-flex gap-2 mb-3">
+                        <input type="file" id="audio-file-input" multiple accept=".mp3,.wav,.aac,.ac3,.wma,.ogg,.flac,.m4a,audio/*" class="d-none">
+                        <button class="btn btn-primary flex-grow-1" id="btn-audio-upload">
+                            <i class="bi bi-cloud-upload me-2"></i>Importar Audio
+                        </button>
+                        <button class="btn btn-outline-light" id="btn-audio-refresh">
+                            <i class="bi bi-arrow-clockwise me-1"></i>Refrescar Biblioteca
+                        </button>
+                    </div>
                     <div class="audio-container bg-dark rounded p-3 mb-3">
                         <audio id="audio-player" class="w-100" controls></audio>
                     </div>
@@ -547,8 +556,10 @@
     <script src="{{ url_for('static', filename='js/timeline/timelineSelectTrackByLabel.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/timelineMultiTracks.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/sidebarCollapse.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/audioTimelineIntegration.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioEditor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioConvert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/audio/audioImportExport.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryInit.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryUpload.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryDisplay.js') }}"></script>

@@ -32,30 +32,56 @@ def get_file_type(filename):
 def get_media_info(file_path):
     """Obtiene información del archivo multimedia usando FFprobe"""
     try:
-        command = [
-            'ffprobe',
-            '-v', 'error',
-            '-select_streams', 'v:0',
-            '-show_entries', 'stream=width,height,duration',
-            '-of', 'json',
-            file_path
-        ]
-        
+        filename = os.path.basename(file_path)
+        extension = filename.split('.').pop().lower() if '.' in filename else ''
+        is_audio = extension in ALLOWED_EXTENSIONS['audio']
+
+        if is_audio:
+            command = [
+                'ffprobe',
+                '-v', 'error',
+                '-show_entries', 'format=duration',
+                '-show_entries', 'stream=duration',
+                '-of', 'json',
+                file_path
+            ]
+        else:
+            command = [
+                'ffprobe',
+                '-v', 'error',
+                '-select_streams', 'v:0',
+                '-show_entries', 'stream=width,height,duration',
+                '-of', 'json',
+                file_path
+            ]
+
         result = subprocess.run(command, capture_output=True, text=True)
-        
+
         if result.returncode == 0:
             import json
             info = json.loads(result.stdout)
-            if info.get('streams'):
-                stream = info['streams'][0]
-                return {
-                    'width': stream.get('width'),
-                    'height': stream.get('height'),
-                    'duration': stream.get('duration')
-                }
+
+            if is_audio:
+                duration = None
+                if info.get('format') and info['format'].get('duration'):
+                    duration = float(info['format']['duration'])
+                elif info.get('streams'):
+                    for stream in info['streams']:
+                        if stream.get('duration'):
+                            duration = float(stream['duration'])
+                            break
+                return {'width': None, 'height': None, 'duration': duration}
+            else:
+                if info.get('streams'):
+                    stream = info['streams'][0]
+                    return {
+                        'width': stream.get('width'),
+                        'height': stream.get('height'),
+                        'duration': stream.get('duration')
+                    }
     except Exception as e:
         print(f"Error obteniendo info del archivo: {e}")
-    
+
     return {'width': None, 'height': None, 'duration': None}
 
 def upload_to_library(request):
