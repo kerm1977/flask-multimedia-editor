@@ -1,0 +1,555 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Editor Integral de Medios</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/ffmpeg@0.12.7/dist/umd/ffmpeg.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@ffmpeg/util@0.12.1/dist/umd/index.min.js"></script>
+</head>
+<body class="bg-dark text-white">
+    <!-- Main Container -->
+    <div class="container-fluid p-0">
+        <div class="d-flex gap-0" style="height: 100vh;">
+            <!-- Sidebar -->
+            <div class="bg-dark border-end border-secondary" 
+                 id="sidebar-panel" 
+                 style="width: 200px; min-width: 180px; max-width: 250px;">
+                <div class="p-3">
+                    <h6 class="m-0 fw-bold text-white mb-4"><i class="bi bi-grid-3x3-gap me-2"></i>Editor</h6>
+                    <ul class="nav flex-column gap-1">
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 d-flex align-items-center gap-2 px-2 py-2 rounded" href="#" id="nav-upload">
+                                <i class="bi bi-cloud-upload"></i> Subir
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 d-flex align-items-center gap-2 px-2 py-2 rounded" href="#" id="nav-photo">
+                                <i class="bi bi-image"></i> Foto
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 d-flex align-items-center gap-2 px-2 py-2 rounded" href="#" id="nav-video">
+                                <i class="bi bi-camera-video"></i> Video
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link text-white-50 d-flex align-items-center gap-2 px-2 py-2 rounded" href="#" id="nav-audio">
+                                <i class="bi bi-music-note-beamed"></i> Audio
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Floating Action Button -->
+            <div class="position-fixed" style="bottom: 20px; right: 20px; z-index: 1000;">
+                <div class="dropdown">
+                    <button class="btn btn-primary rounded-circle shadow-lg" 
+                            id="fab-menu" 
+                            data-bs-toggle="dropdown" 
+                            style="width: 56px; height: 56px;">
+                        <i class="bi bi-gear fs-4"></i>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary">
+                        <li>
+                            <a class="dropdown-item text-white" href="#" id="btn-reset-layout">
+                                <i class="bi bi-arrow-counterclockwise me-2"></i>Reset Layout
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white" href="#" id="btn-clear-cache">
+                                <i class="bi bi-trash me-2"></i>Limpiar Caché
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white" href="#" id="btn-export-settings">
+                                <i class="bi bi-download me-2"></i>Exportar Config
+                            </a>
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white" href="#" id="btn-toggle-console">
+                                <i class="bi bi-terminal me-2"></i>Consola
+                            </a>
+                        </li>
+                        <li>
+                            <hr class="border-secondary">
+                        </li>
+                        <li>
+                            <a class="dropdown-item text-white" href="#" id="btn-about">
+                                <i class="bi bi-info-circle me-2"></i>Acerca de
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Console Panel -->
+            <div class="position-fixed bg-dark border border-secondary rounded shadow-lg" 
+                 id="console-panel" 
+                 style="bottom: 90px; right: 20px; width: 400px; height: 300px; z-index: 999; display: none;">
+                <div class="d-flex align-items-center justify-content-between p-2 border-bottom border-secondary">
+                    <h6 class="m-0 text-white"><i class="bi bi-terminal me-2"></i>Consola</h6>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-clear-console">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                        <button class="btn btn-sm btn-outline-secondary" id="btn-close-console">
+                            <i class="bi bi-x"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="p-2 overflow-auto" style="height: calc(100% - 45px); background: #1a1a1a;" id="console-output">
+                    <div class="text-white-50 small">Consola de logs iniciada...</div>
+                </div>
+            </div>
+
+            <!-- Main Content Area -->
+            <div class="flex-grow-1 d-flex flex-column gap-3">
+                <!-- Upload Section -->
+                <div id="upload-section" class="content-section draggable-panel bg-gradient-secondary rounded shadow-lg p-4 flex-grow-1">
+                    <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                        <h5 class="m-0 fw-bold"><i class="bi bi-cloud-upload me-2"></i>Subir Archivos</h5>
+                        <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                    </div>
+                    <div class="upload-zone border-2 border-dashed border-secondary rounded p-5 text-center mb-3">
+                        <i class="bi bi-cloud-arrow-up fs-1 text-white-50 mb-3"></i>
+                        <p class="text-white-50 mb-3">Arrastra archivos aquí o haz clic para seleccionar</p>
+                        <input type="file" class="form-control mb-3" id="file-input" multiple style="display: none;">
+                        <button class="btn btn-primary" id="btn-upload">
+                            <i class="bi bi-upload me-2"></i>Seleccionar Archivos
+                        </button>
+                    </div>
+                    <div id="upload-list" class="d-flex flex-column gap-2"></div>
+                </div>
+
+                <!-- Photo Editor Section -->
+                <div id="photo-section" class="content-section d-none d-flex gap-3 flex-grow-1">
+                    <!-- Canvas Panel -->
+                    <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3 flex-grow-1" id="canvas-panel">
+                        <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                            <h6 class="m-0 fw-bold"><i class="bi bi-easel me-2"></i>Lienzo Principal</h6>
+                            <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                        </div>
+                        <div class="canvas-container bg-dark rounded overflow-hidden" style="height: calc(100% - 50px);">
+                            <canvas id="main-canvas" class="w-100 h-100"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Right Panel Stack -->
+                    <div class="d-flex flex-column gap-3" style="width: 300px; min-width: 250px; max-width: 400px;">
+                        <!-- Layers Panel -->
+                        <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3" id="layers-panel-container">
+                            <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                                <h6 class="m-0 fw-bold"><i class="bi bi-layers me-2"></i>Capas</h6>
+                                <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                            </div>
+                            <div id="layers-panel" class="list-group flex-grow-1" style="max-height: 200px; overflow-y: auto;"></div>
+                        </div>
+
+                        <!-- Tools Panel -->
+                        <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3" id="tools-panel">
+                            <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                                <h6 class="m-0 fw-bold"><i class="bi bi-tools me-2"></i>Herramientas</h6>
+                                <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                            </div>
+                            <div class="d-flex flex-column gap-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-select">
+                                        <i class="bi bi-cursor me-1"></i>Seleccionar
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-move">
+                                        <i class="bi bi-arrows-move me-1"></i>Mover
+                                    </button>
+                                </div>
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-scale">
+                                        <i class="bi bi-aspect-ratio me-1"></i>Escalar
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-rotate">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>Rotar
+                                    </button>
+                                </div>
+                                <hr class="border-secondary my-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-copy">
+                                        <i class="bi bi-clipboard me-1"></i>Copiar
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-cut">
+                                        <i class="bi bi-scissors me-1"></i>Cortar
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-paste">
+                                        <i class="bi bi-clipboard-check me-1"></i>Pegar
+                                    </button>
+                                </div>
+                                <hr class="border-secondary my-2">
+                                <div class="d-flex flex-wrap gap-2">
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-undo">
+                                        <i class="bi bi-arrow-counterclockwise me-1"></i>Deshacer
+                                    </button>
+                                    <button class="btn btn-outline-light btn-sm flex-grow-1" id="btn-redo">
+                                        <i class="bi bi-arrow-clockwise me-1"></i>Rehacer
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Video Editor Section -->
+                <div id="video-section" class="content-section d-none d-flex flex-column gap-3 flex-grow-1">
+                    <!-- Top Row: Video Preview + Library -->
+                    <div class="d-flex gap-3">
+                        <!-- Video Preview Panel -->
+                        <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3 flex-grow-1 d-flex flex-column" id="video-preview-panel" style="flex: 2;">
+                            <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                                <h6 class="m-0 fw-bold"><i class="bi bi-play-circle me-2"></i>Vista Previa</h6>
+                                <div class="d-flex gap-2">
+                                    <button class="btn btn-sm btn-outline-light" id="btn-fit-screen">
+                                        <i class="bi bi-aspect-ratio"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-light" id="btn-fullscreen">
+                                        <i class="bi bi-fullscreen"></i>
+                                    </button>
+                                </div>
+                            </div>
+                            <div class="video-preview-container bg-black rounded overflow-hidden position-relative" style="height: 400px;">
+                                <video id="video-player" class="w-100 h-100 object-contain"></video>
+                                <div class="video-overlay position-absolute bottom-0 left-0 right-0 p-3 bg-gradient-to-t" style="background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);">
+                                    <div class="d-flex align-items-center gap-3">
+                                        <button class="btn btn-primary rounded-circle" id="btn-play-pause" style="width: 50px; height: 50px;">
+                                            <i class="bi bi-play-fill fs-4"></i>
+                                        </button>
+                                        <div class="flex-grow-1">
+                                            <div class="progress" style="height: 6px; cursor: pointer;" id="video-progress">
+                                                <div class="progress-bar bg-primary" id="video-progress-bar" style="width: 0%;"></div>
+                                            </div>
+                                            <div class="d-flex justify-content-between mt-1">
+                                                <small class="text-white-50" id="video-current-time">00:00</small>
+                                                <small class="text-white-50" id="video-duration">00:00</small>
+                                            </div>
+                                        </div>
+                                        <div class="d-flex gap-2">
+                                            <button class="btn btn-sm btn-outline-light" id="btn-volume">
+                                                <i class="bi bi-volume-up"></i>
+                                            </button>
+                                            <button class="btn btn-sm btn-outline-light" id="btn-speed">
+                                                <i class="bi bi-speedometer2"></i> 1x
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Library Panel (Side Panel) -->
+                        <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3 d-flex flex-column" id="library-panel" style="flex: 1; min-width: 300px; max-width: 400px; height: 100%;">
+                            <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                                <h6 class="m-0 fw-bold"><i class="bi bi-collection me-2"></i>Biblioteca</h6>
+                                <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                            </div>
+                            
+                            <!-- Upload Button -->
+                            <div class="d-flex gap-2 mb-3">
+                                <input type="file" id="library-file-input" multiple accept="video/*,audio/*,image/*" class="d-none">
+                                <button class="btn btn-sm btn-primary flex-grow-1" id="btn-library-upload">
+                                    <i class="bi bi-upload me-1"></i>Subir Archivos
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-settings">
+                                    <i class="bi bi-gear"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Tabs for filtering -->
+                            <ul class="nav nav-tabs nav-fill mb-3" id="library-tabs">
+                                <li class="nav-item">
+                                    <a class="nav-link active text-white-50" href="#" data-type="" id="tab-all" title="Todos">
+                                        <i class="bi bi-grid"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white-50" href="#" data-type="video" id="tab-video" title="Videos">
+                                        <i class="bi bi-camera-video"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white-50" href="#" data-type="audio" id="tab-audio" title="Audio">
+                                        <i class="bi bi-music-note-beamed"></i>
+                                    </a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link text-white-50" href="#" data-type="image" id="tab-image" title="Imágenes">
+                                        <i class="bi bi-image"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                            
+                            <!-- Files Grid with Thumbnails -->
+                            <div id="library-files-grid" style="min-height: 200px; max-height: 400px; background: #1a1a1a; border-radius: 4px; padding: 8px; overflow-y: auto; overflow-x: hidden; border: 1px solid #444;">
+                                <!-- Files will be loaded here -->
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Timeline Panel (Full Width) -->
+                    <div class="draggable-panel bg-gradient-secondary rounded shadow-lg p-3" id="timeline-panel">
+                        <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                            <div class="d-flex flex-wrap gap-2">
+                                <button class="btn btn-sm btn-outline-light" id="btn-split" title="Dividir">
+                                    <i class="bi bi-scissors"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-trim" title="Recortar">
+                                    <i class="bi bi-aspect-ratio"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-delete" title="Eliminar">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-speed-control" title="Velocidad">
+                                    <i class="bi bi-speedometer2"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-volume-control" title="Volumen">
+                                    <i class="bi bi-volume-up"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-text" title="Texto">
+                                    <i class="bi bi-type"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-sticker" title="Sticker">
+                                    <i class="bi bi-emoji-smile"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-filter" title="Filtros">
+                                    <i class="bi bi-palette"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-transition" title="Transición">
+                                    <i class="bi bi-arrow-repeat"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-music" title="Música">
+                                    <i class="bi bi-music-note-beamed"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-add-voiceover" title="Voz">
+                                    <i class="bi bi-mic"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-export" title="Exportar">
+                                    <i class="bi bi-download"></i>
+                                </button>
+                            </div>
+                            <div class="d-flex gap-2">
+                                <button class="btn btn-sm btn-outline-light" id="btn-zoom-in">
+                                    <i class="bi bi-zoom-in"></i>
+                                </button>
+                                <button class="btn btn-sm btn-outline-light" id="btn-zoom-out">
+                                    <i class="bi bi-zoom-out"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="timeline-container" style="height: 200px;">
+                            <!-- Time ruler -->
+                            <div class="time-ruler d-flex align-items-end border-bottom border-secondary mb-2" style="height: 25px;">
+                                <div class="time-mark flex-grow-1 text-center text-white-50 small">0:00</div>
+                                <div class="time-mark flex-grow-1 text-center text-white-50 small">0:15</div>
+                                <div class="time-mark flex-grow-1 text-center text-white-50 small">0:30</div>
+                                <div class="time-mark flex-grow-1 text-center text-white-50 small">0:45</div>
+                                <div class="time-mark flex-grow-1 text-center text-white-50 small">1:00</div>
+                            </div>
+                            <!-- Tracks -->
+                            <div class="tracks-container d-flex flex-column gap-2">
+                                <!-- Video Track -->
+                                <div class="track-row d-flex align-items-center gap-2">
+                                    <div class="track-label bg-dark rounded p-2 text-center" style="width: 80px;">
+                                        <i class="bi bi-camera-video"></i>
+                                        <small class="d-block">Video</small>
+                                    </div>
+                                    <div class="track-track flex-grow-1 bg-dark rounded p-2 position-relative" style="height: 60px;" id="video-track">
+                                        <div id="timeline" class="w-100 h-100 position-relative"></div>
+                                    </div>
+                                </div>
+                                <!-- Audio Track -->
+                                <div class="track-row d-flex align-items-center gap-2">
+                                    <div class="track-label bg-dark rounded p-2 text-center" style="width: 80px;">
+                                        <i class="bi bi-music-note"></i>
+                                        <small class="d-block">Audio</small>
+                                    </div>
+                                    <div class="track-track flex-grow-1 bg-dark rounded p-2 position-relative" style="height: 60px;" id="audio-track">
+                                    </div>
+                                </div>
+                                <!-- Effects Track -->
+                                <div class="track-row d-flex align-items-center gap-2">
+                                    <div class="track-label bg-dark rounded p-2 text-center" style="width: 80px;">
+                                        <i class="bi bi-magic"></i>
+                                        <small class="d-block">Efectos</small>
+                                    </div>
+                                    <div class="track-track flex-grow-1 bg-dark rounded p-2 position-relative" style="height: 60px;" id="effects-track">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Timeline Footer -->
+                        <div class="timeline-footer border-top border-secondary pt-2 mt-2" style="height: 50px;">
+                            <!-- Footer content for future tools -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Audio Editor Section -->
+                <div id="audio-section" class="content-section d-none draggable-panel bg-gradient-secondary rounded shadow-lg p-4 flex-grow-1" id="audio-panel">
+                    <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
+                        <h5 class="m-0 fw-bold"><i class="bi bi-music-note-beamed me-2"></i>Editor de Audio</h5>
+                        <i class="bi bi-grip-vertical text-white-50 cursor-grab"></i>
+                    </div>
+                    <div class="audio-container bg-dark rounded p-3 mb-3">
+                        <audio id="audio-player" class="w-100" controls></audio>
+                    </div>
+                    <div id="waveform" class="bg-dark rounded p-2 mb-3" style="height: 200px;"></div>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary flex-grow-1" id="btn-convert-mp3">
+                            <i class="bi bi-file-mp3 me-2"></i>Convertir a MP3
+                        </button>
+                        <button class="btn btn-primary flex-grow-1" id="btn-convert-aac">
+                            <i class="bi bi-file-earmark-music me-2"></i>Convertir a AAC
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Settings Modal -->
+    <div class="modal fade" id="settingsModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content bg-dark text-white border-secondary">
+                <div class="modal-header border-secondary">
+                    <h5 class="modal-title"><i class="bi bi-gear me-2"></i>Configuración de Conversión</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <h6 class="mb-3">Formatos a Convertir Automáticamente</h6>
+                    <div class="row g-3 mb-4">
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-mkv" checked>
+                                <label class="form-check-label" for="auto-convert-mkv">MKV → MP4</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-avi" checked>
+                                <label class="form-check-label" for="auto-convert-avi">AVI → MP4</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-wmv" checked>
+                                <label class="form-check-label" for="auto-convert-wmv">WMV → MP4</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-flv" checked>
+                                <label class="form-check-label" for="auto-convert-flv">FLV → MP4</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-ac3">
+                                <label class="form-check-label" for="auto-convert-ac3">AC3 → AAC</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox" id="auto-convert-wma">
+                                <label class="form-check-label" for="auto-convert-wma">WMA → MP3</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <h6 class="mb-3">Configuración de Calidad</h6>
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <label class="form-label">Codec de Video</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="video-codec">
+                                <option value="libx264" selected>H.264 (Recomendado)</option>
+                                <option value="libx265">H.265 (HEVC)</option>
+                                <option value="libvpx">VP8</option>
+                                <option value="libvpx-vp9">VP9</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Codec de Audio</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="audio-codec">
+                                <option value="aac" selected>AAC (Recomendado)</option>
+                                <option value="mp3">MP3</option>
+                                <option value="libvorbis">Vorbis</option>
+                                <option value="libopus">Opus</option>
+                            </select>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Calidad de Video (CRF)</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="video-quality">
+                                <option value="18" selected>Alta (18)</option>
+                                <option value="20">Media-Alta (20)</option>
+                                <option value="23">Media (23)</option>
+                                <option value="26">Media-Baja (26)</option>
+                                <option value="28">Baja (28)</option>
+                            </select>
+                            <small class="text-white-50">Menor = mejor calidad</small>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="form-label">Bitrate de Audio</label>
+                            <select class="form-select bg-dark text-white border-secondary" id="audio-bitrate">
+                                <option value="320k">320 kbps (Alta)</option>
+                                <option value="256k">256 kbps</option>
+                                <option value="192k" selected>192 kbps (Media)</option>
+                                <option value="128k">128 kbps (Baja)</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-primary" id="btn-save-settings">Guardar Configuración</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/ui/console.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui/fabMenu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui/draggablePanels.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui/navigation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ui/keyboardShortcuts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video/ffmpegConverter.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/upload.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/cut.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/paste.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/select.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/move.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/scale.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/rotate.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/undo.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/redo.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/actions/copy.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/canvas/canvas.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/canvas/layers.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video/videoPlayer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video/videoEditor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/video/timeline.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineShortcuts.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineUndoRedo.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelinePlayhead.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineRulerClick.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineSelectTrack.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineSelectTrackByLabel.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/audio/audioEditor.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/audio/audioConvert.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryInit.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryUpload.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryDisplay.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryContextMenu.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryTimeline.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/libraryConversion.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/library/librarySettings.js') }}"></script>
+</body>
+</html>
