@@ -31,24 +31,23 @@ if (document.readyState === 'loading') {
 
 function initTrackMute() {
     // === Botón de volumen del previsualizador (#btn-volume) ===
-    // Esperar a que previewControls.js lo inyecte
-    var volumeBtn = document.getElementById('btn-volume');
-    if (!volumeBtn) {
-        setTimeout(initTrackMute, 100);
-        return;
-    }
-
-    // Clonar para remover listeners previos de videoEditor.js
-    var newVolBtn = volumeBtn.cloneNode(true);
-    volumeBtn.parentNode.replaceChild(newVolBtn, volumeBtn);
-    newVolBtn.dataset.muted = 'false';
-
-    newVolBtn.addEventListener('click', function(e) {
-        e.preventDefault();
-        e.stopPropagation();
-        // Toggle mute del track 1 (video-track) - sincronizado
-        toggleTrackMute('video-track');
+    // Usar event delegation en document para no perder el listener
+    // si otro script clona/reemplaza el botón
+    document.addEventListener('click', function(e) {
+        var volBtn = e.target.closest('#btn-volume');
+        if (volBtn) {
+            e.preventDefault();
+            e.stopPropagation();
+            console.log('trackMute: btn-volume click detectado');
+            toggleTrackMute('video-track');
+        }
     });
+
+    // Inicializar dataset del btn-volume
+    var volumeBtn = document.getElementById('btn-volume');
+    if (volumeBtn) {
+        volumeBtn.dataset.muted = 'false';
+    }
 
     // === Botones de mute por pista (.track-mute-btn) ===
     // trackControls.js crea los botones, pero el toggle lo manejamos aquí
