@@ -93,14 +93,16 @@ function applyPlaybackSpeed(speed) {
 // ---------------------------------------------------------------------------
 function updateAllSpeedLabels() {
     var speed = SPEED_LEVELS[currentSpeedIndex];
-    var labels = [
-        { id: 'btn-speed', text: '<i class="bi bi-speedometer2"></i> ' + speed + 'x' },
-        { id: 'btn-speed-control', text: '<i class="bi bi-speedometer2"></i> ' + speed + 'x' }
-    ];
-    labels.forEach(function(lbl) {
-        var btn = document.getElementById(lbl.id);
-        if (btn) btn.innerHTML = lbl.text;
-    });
+    // btn-speed es un <i>, usar textContent
+    var speedIcon = document.getElementById('btn-speed');
+    if (speedIcon) {
+        speedIcon.textContent = ' ' + speed + 'x';
+    }
+    // btn-speed-control es un <button>, usar innerHTML
+    var speedCtrlBtn = document.getElementById('btn-speed-control');
+    if (speedCtrlBtn) {
+        speedCtrlBtn.innerHTML = '<i class="bi bi-speedometer2"></i> ' + speed + 'x';
+    }
 }
 
 // ---------------------------------------------------------------------------

@@ -103,9 +103,15 @@ function syncVolumeButton(isMuted) {
     var volBtn = document.getElementById('btn-volume');
     if (!volBtn) return;
     volBtn.dataset.muted = isMuted ? 'true' : 'false';
-    volBtn.innerHTML = isMuted
-        ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
-        : '<i class="bi bi-volume-up"></i>';
+    // btn-volume es un <i>, cambiar la clase del icono directamente
+    volBtn.className = isMuted
+        ? 'bi bi-volume-mute'
+        : 'bi bi-volume-up';
+    if (isMuted) {
+        volBtn.style.color = '#e53e3e';
+    } else {
+        volBtn.style.color = '';
+    }
 }
 
 // ---------------------------------------------------------------------------

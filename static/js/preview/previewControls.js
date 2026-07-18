@@ -43,12 +43,8 @@ function initPreviewControls() {
                 '<small class="text-white-50" id="video-duration">00:00</small>' +
             '</div>' +
         '</div>' +
-        '<button class="btn btn-outline-light d-flex justify-content-center align-items-center" id="btn-volume" style="min-width: 44px; min-height: 44px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.5);">' +
-            '<i class="bi bi-volume-up" style="pointer-events: none;"></i>' +
-        '</button>' +
-        '<button class="btn btn-outline-light d-flex justify-content-center align-items-center" id="btn-speed" style="min-width: 44px; min-height: 44px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.5);">' +
-            '<i class="bi bi-speedometer2" style="pointer-events: none;"></i> 1x' +
-        '</button>';
+        '<i class="bi bi-volume-up" id="btn-volume" style="cursor: pointer; pointer-events: auto; font-size: 1.6rem; padding: 4px;" data-muted="false"></i>' +
+        '<i class="bi bi-speedometer2" id="btn-speed" style="cursor: pointer; pointer-events: auto; font-size: 1.6rem; padding: 4px;"> 1x</i>';
 
     host.appendChild(bar);
     console.log('previewControls inicializado');
