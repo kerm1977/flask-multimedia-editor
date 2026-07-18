@@ -1,8 +1,10 @@
 // ============================================================================
+// ⚠️  ARCHIVO BLINDADO — NO MODIFICAR SIN LEER TODOS LOS COMENTARIOS ⚠️
+//
 // Creación automática de pistas.
 // Archivo independiente: no modifica código blindado.
 //
-// Reglas:
+// REGLAS CRÍTICAS (NO ROMPER):
 //   1. Doble-click en biblioteca:
 //      - Si el track de ese tipo YA tiene clips → crea pista nueva automáticamente
 //      - Cada video/audio nuevo del doble-click va a su propia pista
@@ -10,7 +12,13 @@
 //   2. Drag & drop desde biblioteca:
 //      - El clip cae en un espacio vacío del track destino
 //      - JAMÁS se superpone a otro clip existente
-//   3. Solo existen pistas de Video y Audio
+//   3. Solo existen pistas de Video y Audio. No hay pistas de imágenes ni efectos.
+//   4. ⚠️ loadVideoInPlayer SOLO se llama para track 1 (video-track).
+//      Tracks 2+ son manejados por multiVideoPreview.js con overlays independientes.
+//      Si llamas loadVideoInPlayer para track 2+, el video reemplazará al de track 1
+//      en el video-player original, rompiendo la capa de visualización.
+//   5. Máximo 3 pistas por tipo (MAX_TRACKS_PER_TYPE = 3 en timelineMultiTracks.js).
+//   6. Al eliminar una pista, trackCounters decrementa (timelineMultiTracks.js).
 // ============================================================================
 
 if (document.readyState === 'loading') {

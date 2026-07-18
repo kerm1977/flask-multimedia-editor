@@ -1,16 +1,17 @@
 // ============================================================================
-// Gestión de pistas adicionales (hasta 5 por tipo: Video, Audio, Imágenes,
-// Efectos). Archivo totalmente independiente: no modifica timelinePlayhead.js
+// ⚠️  ARCHIVO BLINDADO — NO MODIFICAR SIN LEER TODOS LOS COMENTARIOS ⚠️
+//
+// Gestión de pistas adicionales (hasta 3 por tipo: Video, Audio).
+// Archivo totalmente independiente: no modifica timelinePlayhead.js
 // ni ningún otro archivo blindado.
 //
-// Dos formas de agregar pistas:
-//   1. Botón "+" visible al lado de cada grupo de pistas.
-//   2. Menú contextual (click derecho) sobre el área de pistas.
-//
-// Cada pista nueva recibe un ID único: video-track-2, audio-track-3, etc.
-// Las pistas nuevas son funcionales para drag & drop de clips porque usan
-// la misma estructura DOM (track-row > track-label + track-track) y la
-// misma clase .timeline-clip que el resto del sistema.
+// REGLAS CRÍTICAS (NO ROMPER):
+//   1. MAX_TRACKS_PER_TYPE = 3. Solo 3 pistas de video y 3 de audio.
+//   2. Solo existen tipos: video y audio. No images, no effects.
+//   3. Al eliminar una pista, trackCounters[type] DECREMENTA.
+//      Si no decrementa, no se pueden crear pistas nuevas después de eliminar.
+//   4. TRACK_TYPES y trackCounters deben estar sincronizados.
+//   5. addTrackOfType crea pistas con IDs: video-track-2, video-track-3, etc.
 // ============================================================================
 
 document.addEventListener('DOMContentLoaded', function() {

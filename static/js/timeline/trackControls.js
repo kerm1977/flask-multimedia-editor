@@ -1,13 +1,19 @@
 // ============================================================================
+// ⚠️  ARCHIVO BLINDADO — NO MODIFICAR SIN LEER TODOS LOS COMENTARIOS ⚠️
+//
 // Botones de Mute y Ocultar/VISIBLE por cada pista del timeline.
 // Archivo independiente: no modifica código blindado ni timelineMultiTracks.js.
 //
-// Agrega dos botones junto al número de pista (track-number-badge):
-//   1. Mute (bi-volume-up / bi-volume-mute): silencia el audio de la pista
-//   2. Ocultar (bi-eye / bi-eye-slash): invisibiliza los clips de la pista
-//
-// Funciona para todas las pistas: video-track, audio-track, image-track, etc.
-// Usa MutationObserver para detectar cuando se agregan nuevas pistas.
+// REGLAS CRÍTICAS (NO ROMPER):
+//   1. Mute y ocultar son INDEPENDIENTES por pista:
+//      - Mute track 1 (video-track) → videoPlayer.muted = true/false
+//      - Mute track 2+ (video-track-2, etc.) → overlayState[trackId].videoEl.muted
+//      - Ocultar track 1 → multiVideoPreview.js fuerza opacity:0 !important + muted
+//      - Ocultar track 2+ → overlay opacity:0 + muted + pause
+//   2. NUNCA silenciar u ocultar un track afecta a los demás tracks.
+//   3. NO manipular videoPlayer.style.opacity directamente aquí.
+//      multiVideoPreview.js maneja la visibilidad del video-player.
+//   4. Solo existen pistas de Video y Audio (no images, no effects).
 // ============================================================================
 
 if (document.readyState === 'loading') {

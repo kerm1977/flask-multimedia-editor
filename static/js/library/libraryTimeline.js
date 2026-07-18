@@ -1,3 +1,16 @@
+// ============================================================================
+// ⚠️  ARCHIVO BLINDADO — NO MODIFICAR SIN LEER TODOS LOS COMENTARIOS ⚠️
+//
+// libraryTimeline.js — Drag & drop y doble-click desde biblioteca al timeline.
+//
+// REGLAS CRÍTICAS (NO ROMPER):
+//   1. loadVideoInPlayer SOLO se llama si el target es video-track (track 1).
+//      Tracks 2+ son manejados por multiVideoPreview.js con overlays.
+//   2. Todo lo que no es audio (video, imagen, gif, etc.) va a pistas de video.
+//   3. Solo existen pistas de Video y Audio (no images, no effects).
+//   4. Solo video-track y audio-track en initTimelineDropZones.
+// ============================================================================
+
 function initTimelineDropZones() {
     const videoTrack = document.getElementById('video-track');
     const audioTrack = document.getElementById('audio-track');
