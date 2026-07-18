@@ -206,27 +206,8 @@
                             <div class="video-preview-container bg-black rounded overflow-hidden position-relative" style="height: 400px;">
                                 <video id="video-player" class="w-100 h-100 object-contain"></video>
                             </div>
-                            <!-- Barra de controles debajo del previsualizador -->
-                            <div class="video-controls-bar d-flex align-items-center justify-content-center gap-3 px-3 py-2 bg-gradient-secondary rounded mt-2">
-                                <button class="btn btn-primary rounded-circle" id="btn-play-pause" style="width: 42px; height: 42px;">
-                                    <i class="bi bi-play-fill fs-5"></i>
-                                </button>
-                                <div class="flex-grow-1" style="max-width: 400px;">
-                                    <div class="progress" style="height: 6px; cursor: pointer;" id="video-progress">
-                                        <div class="progress-bar bg-primary" id="video-progress-bar" style="width: 0%;"></div>
-                                    </div>
-                                    <div class="d-flex justify-content-between mt-1">
-                                        <small class="text-white-50" id="video-current-time">00:00</small>
-                                        <small class="text-white-50" id="video-duration">00:00</small>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-outline-light" id="btn-volume">
-                                    <i class="bi bi-volume-up"></i>
-                                </button>
-                                <button class="btn btn-sm btn-outline-light" id="btn-speed">
-                                    <i class="bi bi-speedometer2"></i> 1x
-                                </button>
-                            </div>
+                            <!-- Barra de controles cargada dinámicamente por previewControls.js -->
+                            <div id="preview-controls-host"></div>
                         </div>
 
                         <!-- Library Panel (Side Panel) -->
@@ -517,6 +498,7 @@
     <script src="{{ url_for('static', filename='js/actions/copy.js') }}"></script>
     <script src="{{ url_for('static', filename='js/canvas/canvas.js') }}"></script>
     <script src="{{ url_for('static', filename='js/canvas/layers.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/previewControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoPlayer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoEditor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/timeline.js') }}"></script>
