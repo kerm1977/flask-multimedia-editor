@@ -11,7 +11,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function initTimelineSelectTrackByLabel() {
-    const trackIds = ['video-track', 'audio-track', 'effects-track'];
+    const trackIds = ['video-track', 'audio-track'];
 
     trackIds.forEach(trackId => {
         const track = document.getElementById(trackId);

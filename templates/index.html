@@ -361,15 +361,6 @@
                                     <div class="track-track flex-grow-1 bg-dark rounded p-2 position-relative" style="height: 60px;" id="audio-track">
                                     </div>
                                 </div>
-                                <!-- Effects Track -->
-                                <div class="track-row d-flex align-items-center gap-2">
-                                    <div class="track-label bg-dark rounded p-2 text-center" style="width: 80px;">
-                                        <i class="bi bi-magic"></i>
-                                        <small class="d-block">Efectos</small>
-                                    </div>
-                                    <div class="track-track flex-grow-1 bg-dark rounded p-2 position-relative" style="height: 60px;" id="effects-track">
-                                    </div>
-                                </div>
                             </div>
                         </div>
                         <!-- Timeline Footer -->
@@ -557,6 +548,16 @@
     <script src="{{ url_for('static', filename='js/timeline/timelineMultiTracks.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/sidebarCollapse.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/audioTimelineIntegration.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/audioPlaybackSync.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/trackControls.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/audioSpectrumVisualization.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/trackVolumeControls.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/timelineClipWaveforms.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/multiTrackPlayheads.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/clipDragMove.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/clipCollisionPrevention.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/autoTrackCreation.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/timeline/multiVideoPreview.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioEditor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioConvert.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioImportExport.js') }}"></script>

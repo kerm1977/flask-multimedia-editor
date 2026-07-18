@@ -8,24 +8,26 @@ const MAX_TIMELINE_UNDO_STEPS = 50;
 
 function initTimelineUndoRedo() {
     console.log('Inicializando sistema undo/redo para timeline...');
-    
-    // Control+Z for undo
+
+    // Control+Z for undo, Control+Shift+Z or Control+Y for redo
     document.addEventListener('keydown', function(e) {
-        if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) {
-            e.preventDefault();
-            performTimelineUndo();
-        }
-        
-        // Control+Shift+Z or Control+Y for redo
-        // NOTE: e.key becomes 'Z' (uppercase) when Shift is held, so compare
-        // case-insensitively here.
         const keyLower = e.key.toLowerCase();
-        if ((e.ctrlKey || e.metaKey) && (e.shiftKey && keyLower === 'z' || keyLower === 'y')) {
+
+        if ((e.ctrlKey || e.metaKey) && keyLower === 'z' && !e.shiftKey) {
             e.preventDefault();
-            performTimelineRedo();
+            e.stopPropagation();
+            performTimelineUndo();
+            return;
         }
-    });
-    
+
+        if ((e.ctrlKey || e.metaKey) && ((e.shiftKey && keyLower === 'z') || keyLower === 'y')) {
+            e.preventDefault();
+            e.stopPropagation();
+            performTimelineRedo();
+            return;
+        }
+    }, true); // capture=true para ejecutar antes que keyboardShortcuts.js
+
     console.log('Sistema undo/redo para timeline inicializado');
 }
 
@@ -46,28 +48,34 @@ function getVideoTrackHtmlWithoutPlayhead(videoTrack) {
 }
 
 function saveTimelineState() {
-    const videoTrack = document.getElementById('video-track');
-    const audioTrack = document.getElementById('audio-track');
-    const effectsTrack = document.getElementById('effects-track');
-    
-    if (!videoTrack || !audioTrack || !effectsTrack) return;
-    
+    // Guardar TODAS las pistas, no solo las 3 originales
+    const allTracks = document.querySelectorAll('.tracks-container .track-track[id]');
+    const trackStates = {};
+
+    allTracks.forEach(function(track) {
+        const id = track.id;
+        if (!id) return;
+
+        if (id === 'video-track') {
+            trackStates[id] = getVideoTrackHtmlWithoutPlayhead(track);
+        } else {
+            trackStates[id] = track.innerHTML;
+        }
+    });
+
     const state = {
-        videoTrack: getVideoTrackHtmlWithoutPlayhead(videoTrack),
-        audioTrack: audioTrack.innerHTML,
-        effectsTrack: effectsTrack.innerHTML,
+        tracks: trackStates,
         timestamp: Date.now()
     };
-    
+
     if (timelineUndoStack.length >= MAX_TIMELINE_UNDO_STEPS) {
         timelineUndoStack.shift();
     }
-    
+
     timelineUndoStack.push(state);
-    // Clear redo stack when new action is performed
     timelineRedoStack.length = 0;
-    
-    console.log('Estado de timeline guardado. Undo stack size:', timelineUndoStack.length);
+
+    console.log('Estado de timeline guardado (todas las pistas). Undo stack:', timelineUndoStack.length);
 }
 
 function restoreVideoTrackHtml(videoTrack, html) {
@@ -90,29 +98,29 @@ function performTimelineUndo() {
         console.log('No hay acciones para deshacer en timeline');
         return;
     }
-    
-    const videoTrack = document.getElementById('video-track');
-    const audioTrack = document.getElementById('audio-track');
-    const effectsTrack = document.getElementById('effects-track');
-    
-    const currentState = {
-        videoTrack: getVideoTrackHtmlWithoutPlayhead(videoTrack),
-        audioTrack: audioTrack.innerHTML,
-        effectsTrack: effectsTrack.innerHTML,
-        timestamp: Date.now()
-    };
-    
-    // Save current state to redo stack
-    timelineRedoStack.push(currentState);
-    
+
+    // Guardar estado actual para redo
+    const allTracks = document.querySelectorAll('.tracks-container .track-track[id]');
+    const currentStates = {};
+    allTracks.forEach(function(track) {
+        const id = track.id;
+        if (!id) return;
+        if (id === 'video-track') {
+            currentStates[id] = getVideoTrackHtmlWithoutPlayhead(track);
+        } else {
+            currentStates[id] = track.innerHTML;
+        }
+    });
+    timelineRedoStack.push({ tracks: currentStates, timestamp: Date.now() });
+
     const previousState = timelineUndoStack.pop();
-    
-    if (videoTrack) restoreVideoTrackHtml(videoTrack, previousState.videoTrack);
-    if (audioTrack) audioTrack.innerHTML = previousState.audioTrack;
-    if (effectsTrack) effectsTrack.innerHTML = previousState.effectsTrack;
-    
-    console.log('Acción de timeline deshecha. Undo stack size:', timelineUndoStack.length);
-    console.log('Redo stack size:', timelineRedoStack.length);
+    restoreAllTrackStates(previousState.tracks);
+
+    if (typeof syncMultiVideoTracks === 'function') {
+        setTimeout(syncMultiVideoTracks, 50);
+    }
+
+    console.log('Undo realizado. Stack:', timelineUndoStack.length, 'Redo:', timelineRedoStack.length);
 }
 
 function performTimelineRedo() {
@@ -120,34 +128,50 @@ function performTimelineRedo() {
         console.log('No hay acciones para rehacer en timeline');
         return;
     }
-    
-    const videoTrack = document.getElementById('video-track');
-    const audioTrack = document.getElementById('audio-track');
-    const effectsTrack = document.getElementById('effects-track');
-    
+
+    // Guardar estado actual para undo
+    const allTracks = document.querySelectorAll('.tracks-container .track-track[id]');
+    const currentStates = {};
+    allTracks.forEach(function(track) {
+        const id = track.id;
+        if (!id) return;
+        if (id === 'video-track') {
+            currentStates[id] = getVideoTrackHtmlWithoutPlayhead(track);
+        } else {
+            currentStates[id] = track.innerHTML;
+        }
+    });
+    timelineUndoStack.push({ tracks: currentStates, timestamp: Date.now() });
+
     const nextState = timelineRedoStack.pop();
-    
-    const currentState = {
-        videoTrack: getVideoTrackHtmlWithoutPlayhead(videoTrack),
-        audioTrack: audioTrack.innerHTML,
-        effectsTrack: effectsTrack.innerHTML,
-        timestamp: Date.now()
-    };
-    
-    // Save current state back to undo stack
-    timelineUndoStack.push(currentState);
-    
-    if (videoTrack) restoreVideoTrackHtml(videoTrack, nextState.videoTrack);
-    if (audioTrack) audioTrack.innerHTML = nextState.audioTrack;
-    if (effectsTrack) effectsTrack.innerHTML = nextState.effectsTrack;
-    
-    console.log('Acción de timeline rehicha. Redo stack size:', timelineRedoStack.length);
-    console.log('Undo stack size:', timelineUndoStack.length);
+    restoreAllTrackStates(nextState.tracks);
+
+    if (typeof syncMultiVideoTracks === 'function') {
+        setTimeout(syncMultiVideoTracks, 50);
+    }
+
+    console.log('Redo realizado. Stack:', timelineUndoStack.length, 'Redo:', timelineRedoStack.length);
+}
+
+// ---------------------------------------------------------------------------
+// Restaurar todas las pistas desde un estado guardado
+// ---------------------------------------------------------------------------
+function restoreAllTrackStates(trackStates) {
+    Object.keys(trackStates).forEach(function(id) {
+        const track = document.getElementById(id);
+        if (!track) return;
+
+        if (id === 'video-track') {
+            restoreVideoTrackHtml(track, trackStates[id]);
+        } else {
+            track.innerHTML = trackStates[id];
+        }
+    });
 }
 
 // Auto-save state when clips are added or removed
-const originalAddClip = addClipToTimeline;
-if (typeof originalAddClip === 'function') {
+const originalAddClip = typeof addClipToTimeline === 'function' ? addClipToTimeline : null;
+if (originalAddClip) {
     window.addClipToTimeline = function(fileData, track) {
         saveTimelineState();
         return originalAddClip(fileData, track);

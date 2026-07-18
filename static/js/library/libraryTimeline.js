@@ -1,9 +1,8 @@
 function initTimelineDropZones() {
     const videoTrack = document.getElementById('video-track');
     const audioTrack = document.getElementById('audio-track');
-    const effectsTrack = document.getElementById('effects-track');
     
-    [videoTrack, audioTrack, effectsTrack].forEach(track => {
+    [videoTrack, audioTrack].forEach(track => {
         if (!track) return;
         
         track.addEventListener('dragover', (e) => {
@@ -103,18 +102,16 @@ function addFileToTimelineByType(file) {
     let targetTrack;
     
     switch(file.file_type) {
-        case 'video':
-            targetTrack = document.getElementById('video-track');
-            break;
         case 'audio':
             targetTrack = document.getElementById('audio-track');
             break;
+        case 'video':
         case 'image':
+        case 'gif':
+        default:
+            // Todo lo que no es audio va a pistas de video
             targetTrack = document.getElementById('video-track');
             break;
-        default:
-            console.error('Tipo de archivo no soportado:', file.file_type);
-            return;
     }
     
     if (!targetTrack) {
@@ -132,8 +129,9 @@ function addFileToTimelineByType(file) {
     
     addClipToTimeline(fileData, targetTrack);
     
-    // Load video in player if it's a video file
-    if (file.file_type === 'video' && typeof loadVideoInPlayer === 'function') {
+    // Load video in player only if it's going to track 1 (video-track)
+    // Tracks 2+ are handled by multiVideoPreview.js overlays
+    if (file.file_type === 'video' && targetTrack && targetTrack.id === 'video-track' && typeof loadVideoInPlayer === 'function') {
         loadVideoInPlayer(file.original_path);
     }
 }

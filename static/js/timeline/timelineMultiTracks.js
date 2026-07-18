@@ -17,16 +17,14 @@ document.addEventListener('DOMContentLoaded', function() {
     initTimelineMultiTracks();
 });
 
-const MAX_TRACKS_PER_TYPE = 5;
+const MAX_TRACKS_PER_TYPE = 3;
 const TRACK_TYPES = {
     video:   { icon: 'bi-camera-video', label: 'Video',    baseId: 'video-track' },
-    audio:   { icon: 'bi-music-note',   label: 'Audio',    baseId: 'audio-track' },
-    image:   { icon: 'bi-image',        label: 'Imágenes', baseId: 'image-track' },
-    effects: { icon: 'bi-magic',        label: 'Efectos',  baseId: 'effects-track' }
+    audio:   { icon: 'bi-music-note',   label: 'Audio',    baseId: 'audio-track' }
 };
 
 // Track counters per type (start at 1 since the original track is #1)
-const trackCounters = { video: 1, audio: 1, image: 0, effects: 1 };
+const trackCounters = { video: 1, audio: 1 };
 
 function initTimelineMultiTracks() {
     relabelOriginalTracks();
@@ -308,7 +306,11 @@ function removeTrack(row, trackId, type) {
             saveTimelineState();
         }
         row.remove();
-        console.log('Pista eliminada:', trackId);
+        // Decrementar el contador para permitir crear pistas nuevas
+        if (typeof trackCounters !== 'undefined' && trackCounters[type] > 1) {
+            trackCounters[type]--;
+        }
+        console.log('Pista eliminada:', trackId, 'Contador ahora:', trackCounters[type]);
     });
 }
 

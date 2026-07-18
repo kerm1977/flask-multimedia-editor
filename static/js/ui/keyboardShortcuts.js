@@ -3,7 +3,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function handleKeyboardShortcuts(event) {
-    if (event.ctrlKey && event.key === 'z') {
+    if (event.ctrlKey && event.key.toLowerCase() === 'z') {
         event.preventDefault();
         
         if (event.shiftKey) {
@@ -58,16 +58,20 @@ function handleKeyboardShortcuts(event) {
 }
 
 function performUndo() {
-    const undoBtn = document.getElementById('btn-undo');
-    if (undoBtn) {
-        undoBtn.click();
+    if (typeof performTimelineUndo === 'function') {
+        performTimelineUndo();
+    } else {
+        const undoBtn = document.getElementById('btn-undo');
+        if (undoBtn) undoBtn.click();
     }
 }
 
 function performRedo() {
-    const redoBtn = document.getElementById('btn-redo');
-    if (redoBtn) {
-        redoBtn.click();
+    if (typeof performTimelineRedo === 'function') {
+        performTimelineRedo();
+    } else {
+        const redoBtn = document.getElementById('btn-redo');
+        if (redoBtn) redoBtn.click();
     }
 }
 

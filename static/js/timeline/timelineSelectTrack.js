@@ -17,9 +17,8 @@ let lastHoveredTrack = null;
 function initTimelineSelectTrack() {
     const videoTrack = document.getElementById('video-track');
     const audioTrack = document.getElementById('audio-track');
-    const effectsTrack = document.getElementById('effects-track');
 
-    [videoTrack, audioTrack, effectsTrack].forEach(track => {
+    [videoTrack, audioTrack].forEach(track => {
         if (!track) return;
         track.addEventListener('mouseenter', () => {
             lastHoveredTrack = track;
