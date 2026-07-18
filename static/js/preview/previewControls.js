@@ -43,11 +43,11 @@ function initPreviewControls() {
                 '<small class="text-white-50" id="video-duration">00:00</small>' +
             '</div>' +
         '</div>' +
-        '<button class="btn btn-sm btn-outline-light" id="btn-volume">' +
-            '<i class="bi bi-volume-up"></i>' +
+        '<button class="btn btn-outline-light d-flex justify-content-center align-items-center" id="btn-volume" style="min-width: 44px; min-height: 44px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.5);">' +
+            '<i class="bi bi-volume-up" style="pointer-events: none;"></i>' +
         '</button>' +
-        '<button class="btn btn-sm btn-outline-light" id="btn-speed">' +
-            '<i class="bi bi-speedometer2"></i> 1x' +
+        '<button class="btn btn-outline-light d-flex justify-content-center align-items-center" id="btn-speed" style="min-width: 44px; min-height: 44px; padding: 6px 10px; border: 1px solid rgba(255,255,255,0.5);">' +
+            '<i class="bi bi-speedometer2" style="pointer-events: none;"></i> 1x' +
         '</button>';
 
     host.appendChild(bar);
