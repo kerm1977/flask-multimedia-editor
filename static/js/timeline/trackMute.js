@@ -46,13 +46,8 @@ function initTrackMute() {
     newVolBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        var isMuted = newVolBtn.dataset.muted === 'true';
-        var newMuted = !isMuted;
-        newVolBtn.dataset.muted = newMuted ? 'true' : 'false';
-        newVolBtn.innerHTML = newMuted
-            ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
-            : '<i class="bi bi-volume-up"></i>';
-        console.log('Volume btn (global):', newMuted ? 'muteado' : 'desmuteado');
+        // Toggle mute del track 1 (video-track) - sincronizado
+        toggleTrackMute('video-track');
     });
 
     // === Botones de mute por pista (.track-mute-btn) ===
@@ -70,12 +65,48 @@ function initTrackMute() {
 
     // === Loop de enforcement ===
     // Cada frame, forzar el estado de mute según los botones.
-    // Esto es necesario porque el código blindado (timelinePlayheadCheckGap.js)
-    // fuerza videoPlayer.muted = false cuando el playhead está sobre un clip,
-    // sobrescribiendo cualquier mute anterior.
+    // También sincroniza el icono del #btn-volume con el estado del track 1.
     requestAnimationFrame(muteEnforceLoop);
 
     console.log('trackMute inicializado (único archivo de mute)');
+}
+
+// ---------------------------------------------------------------------------
+// Toggle mute de una pista y sincronizar iconos
+// ---------------------------------------------------------------------------
+function toggleTrackMute(trackId) {
+    var track = document.getElementById(trackId);
+    if (!track) return;
+    var row = track.closest('.track-row');
+    if (!row) return;
+    var muteBtn = row.querySelector('.track-mute-btn');
+    if (!muteBtn) return;
+
+    var isMuted = muteBtn.dataset.muted === 'true';
+    var newMuted = !isMuted;
+    muteBtn.dataset.muted = newMuted ? 'true' : 'false';
+    muteBtn.innerHTML = newMuted
+        ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
+        : '<i class="bi bi-volume-up"></i>';
+
+    // Si es track 1, sincronizar el botón del previsualizador
+    if (trackId === 'video-track') {
+        syncVolumeButton(newMuted);
+    }
+
+    console.log('Mute toggle:', trackId, newMuted);
+}
+
+// ---------------------------------------------------------------------------
+// Sincronizar el icono del #btn-volume con el estado de mute del track 1
+// ---------------------------------------------------------------------------
+function syncVolumeButton(isMuted) {
+    var volBtn = document.getElementById('btn-volume');
+    if (!volBtn) return;
+    volBtn.dataset.muted = isMuted ? 'true' : 'false';
+    volBtn.innerHTML = isMuted
+        ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
+        : '<i class="bi bi-volume-up"></i>';
 }
 
 // ---------------------------------------------------------------------------
@@ -98,13 +129,7 @@ function bindTrackMuteButtons() {
         newBtn.addEventListener('click', function(e) {
             e.preventDefault();
             e.stopPropagation();
-            var isMuted = newBtn.dataset.muted === 'true';
-            var newMuted = !isMuted;
-            newBtn.dataset.muted = newMuted ? 'true' : 'false';
-            newBtn.innerHTML = newMuted
-                ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
-                : '<i class="bi bi-volume-up"></i>';
-            console.log('Mute toggle:', newBtn.dataset.trackId, newMuted);
+            toggleTrackMute(newBtn.dataset.trackId);
         });
     });
 }
@@ -115,14 +140,15 @@ function bindTrackMuteButtons() {
 // ---------------------------------------------------------------------------
 function muteEnforceLoop() {
     try {
+        // === Sincronizar icono del #btn-volume con track 1 ===
+        var track1Muted = isTrackMuted('video-track');
+        var track1Hidden = isTrackHiddenFlag('video-track');
+        syncVolumeButton(track1Muted);
+
         // === Track 1 (video-track) → #video-player ===
         var vp = document.getElementById('video-player');
         if (vp) {
-            var track1Muted = isTrackMuted('video-track');
-            var globalMuted = isGlobalMuted();
-            // También silenciar si el track está oculto
-            var track1Hidden = isTrackHiddenFlag('video-track');
-            vp.muted = track1Muted || globalMuted || track1Hidden;
+            vp.muted = track1Muted || track1Hidden;
         }
 
         // === Tracks 2+ (video-track-2, etc.) → overlays ===
@@ -131,7 +157,7 @@ function muteEnforceLoop() {
                 if (overlayState[trackId] && overlayState[trackId].videoEl) {
                     var trackMuted = isTrackMuted(trackId);
                     var trackHidden = isTrackHiddenFlag(trackId);
-                    overlayState[trackId].videoEl.muted = trackMuted || globalMuted || trackHidden;
+                    overlayState[trackId].videoEl.muted = trackMuted || trackHidden;
                 }
             });
         }
@@ -141,15 +167,8 @@ function muteEnforceLoop() {
         audioTracks.forEach(function(track) {
             var trackMuted = isTrackMuted(track.id);
             var trackHidden = isTrackHiddenFlag(track.id);
-            if (trackMuted || globalMuted || trackHidden) {
-                // Pausar audios de esta pista
-                if (typeof window.setTrackMuted === 'function') {
-                    window.setTrackMuted(track.id, true);
-                }
-            } else {
-                if (typeof window.setTrackMuted === 'function') {
-                    window.setTrackMuted(track.id, false);
-                }
+            if (typeof window.setTrackMuted === 'function') {
+                window.setTrackMuted(track.id, trackMuted || trackHidden);
             }
         });
     } catch (err) {
@@ -180,10 +199,4 @@ function isTrackHiddenFlag(trackId) {
     var hideBtn = row.querySelector('.track-hide-btn');
     if (!hideBtn) return false;
     return hideBtn.dataset.hidden === 'true';
-}
-
-function isGlobalMuted() {
-    var volBtn = document.getElementById('btn-volume');
-    if (!volBtn) return false;
-    return volBtn.dataset.muted === 'true';
 }
