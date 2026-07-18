@@ -90,7 +90,7 @@ function updateTimelinePlayhead(currentTime, duration) {
 
 function setupEditingTools() {
     const tools = [
-        'btn-trim', 'btn-delete',
+        'btn-trim',
         'btn-volume-control', 'btn-add-text', 'btn-add-sticker',
         'btn-add-filter', 'btn-add-transition', 'btn-add-music',
         'btn-add-voiceover', 'btn-export'
@@ -107,7 +107,6 @@ function setupEditingTools() {
 function handleToolClick(toolId) {
     const toolNames = {
         'btn-trim': 'Recortar',
-        'btn-delete': 'Eliminar',
         'btn-volume-control': 'Control de volumen',
         'btn-add-text': 'Agregar texto',
         'btn-add-sticker': 'Agregar sticker',
