@@ -72,14 +72,14 @@ function addControlsToTrackRow(row) {
     btnContainer.className = 'track-controls-btns';
     btnContainer.style.cssText =
         'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
-        'gap:2px;flex-shrink:0;width:20px;';
+        'gap:4px;flex-shrink:0;width:28px;';
 
     // --- Botón Mute ---
     const muteBtn = document.createElement('button');
     muteBtn.className = 'btn btn-sm track-mute-btn';
     muteBtn.style.cssText =
-        'padding:0;width:18px;height:18px;border:none;background:transparent;' +
-        'color:#8899aa;font-size:11px;line-height:1;';
+        'padding:2px;width:26px;height:26px;border:none;background:transparent;' +
+        'color:#8899aa;font-size:16px;line-height:1;';
     muteBtn.innerHTML = '<i class="bi bi-volume-up"></i>';
     muteBtn.title = 'Mute/Unmute';
     muteBtn.dataset.trackId = trackId;
@@ -95,8 +95,8 @@ function addControlsToTrackRow(row) {
     const hideBtn = document.createElement('button');
     hideBtn.className = 'btn btn-sm track-hide-btn';
     hideBtn.style.cssText =
-        'padding:0;width:18px;height:18px;border:none;background:transparent;' +
-        'color:#8899aa;font-size:11px;line-height:1;';
+        'padding:2px;width:26px;height:26px;border:none;background:transparent;' +
+        'color:#8899aa;font-size:16px;line-height:1;';
     hideBtn.innerHTML = '<i class="bi bi-eye"></i>';
     hideBtn.title = 'Ocultar/Mostrar';
     hideBtn.dataset.trackId = trackId;

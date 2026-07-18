@@ -324,7 +324,19 @@ function mainLoop() {
             track1WasHidden = false;
         }
         // ⚠️ Si track1 no está oculto y track1WasHidden es false:
-        // NO hacemos NADA con el video-player. El código blindado controla gaps.
+        // NO hacemos nada con el opacity. El código blindado controla gaps.
+        // PERO: forzar mute si el botón de mute del track 1 está activo,
+        // porque el código blindado fuerza videoPlayer.muted = false en clips.
+        if (vp && !track1Hidden) {
+            var t1TrackEl = document.getElementById('video-track');
+            if (t1TrackEl) {
+                var t1RowEl = t1TrackEl.closest('.track-row');
+                var t1MuteBtn = t1RowEl ? t1RowEl.querySelector('.track-mute-btn') : null;
+                if (t1MuteBtn && t1MuteBtn.dataset.muted === 'true') {
+                    vp.muted = true;
+                }
+            }
+        }
 
         // ====================================================================
         // === CONTROL DE OVERLAYS (TRACKS 2+) ===
