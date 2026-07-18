@@ -6,8 +6,10 @@
 //
 // Velocidades: 0.25, 0.50, 0.75, 1.0, 1.25, 1.50, 1.75, 2.0, 2.5, 3.0
 //
-// UI: Botón #btn-speed en la barra de controles del previsualizador.
-//     Click cyclea velocidades. Click derecho abre menú con todas las opciones.
+// UI: Dos botones comparten el mismo estado:
+//   - #btn-speed: barra de controles del previsualizador
+//   - #btn-speed-control: barra de herramientas del timeline
+// Click cyclea velocidades. Click derecho abre menú con todas las opciones.
 // ============================================================================
 
 if (document.readyState === 'loading') {
@@ -27,13 +29,26 @@ function initPlaybackSpeed() {
         return;
     }
 
-    // Reemplazar el listener de videoEditor.js clonando el botón
-    var newBtn = speedBtn.cloneNode(true);
-    speedBtn.parentNode.replaceChild(newBtn, speedBtn);
-    speedBtn = newBtn;
+    // Enlazar #btn-speed (previsualizador)
+    bindSpeedButton(speedBtn);
+
+    // Enlazar #btn-speed-control (barra de herramientas del timeline)
+    var speedControlBtn = document.getElementById('btn-speed-control');
+    if (speedControlBtn) {
+        bindSpeedButton(speedControlBtn);
+    }
+
+    updateAllSpeedLabels();
+    console.log('playbackSpeed inicializado (btn-speed + btn-speed-control)');
+}
+
+function bindSpeedButton(btn) {
+    // Clonar para remover listeners previos (videoEditor.js)
+    var newBtn = btn.cloneNode(true);
+    btn.parentNode.replaceChild(newBtn, btn);
 
     // Click izquierdo: cyclear velocidades
-    speedBtn.addEventListener('click', function(e) {
+    newBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
         currentSpeedIndex = (currentSpeedIndex + 1) % SPEED_LEVELS.length;
@@ -41,14 +56,11 @@ function initPlaybackSpeed() {
     });
 
     // Click derecho: mostrar menú de velocidades
-    speedBtn.addEventListener('contextmenu', function(e) {
+    newBtn.addEventListener('contextmenu', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        showSpeedMenu(e.clientX, e.clientY, speedBtn);
+        showSpeedMenu(e.clientX, e.clientY, newBtn);
     });
-
-    updateSpeedButtonLabel(speedBtn);
-    console.log('playbackSpeed inicializado');
 }
 
 // ---------------------------------------------------------------------------
@@ -70,21 +82,25 @@ function applyPlaybackSpeed(speed) {
         });
     }
 
-    // Actualizar label del botón
-    var speedBtn = document.getElementById('btn-speed');
-    if (speedBtn) {
-        updateSpeedButtonLabel(speedBtn);
-    }
+    // Actualizar labels de ambos botones
+    updateAllSpeedLabels();
 
     console.log('playbackSpeed: velocidad cambiada a', speed + 'x');
 }
 
 // ---------------------------------------------------------------------------
-// Actualizar el texto del botón
+// Actualizar el texto de todos los botones de velocidad
 // ---------------------------------------------------------------------------
-function updateSpeedButtonLabel(btn) {
+function updateAllSpeedLabels() {
     var speed = SPEED_LEVELS[currentSpeedIndex];
-    btn.innerHTML = '<i class="bi bi-speedometer2"></i> ' + speed + 'x';
+    var labels = [
+        { id: 'btn-speed', text: '<i class="bi bi-speedometer2"></i> ' + speed + 'x' },
+        { id: 'btn-speed-control', text: '<i class="bi bi-speedometer2"></i> ' + speed + 'x' }
+    ];
+    labels.forEach(function(lbl) {
+        var btn = document.getElementById(lbl.id);
+        if (btn) btn.innerHTML = lbl.text;
+    });
 }
 
 // ---------------------------------------------------------------------------
