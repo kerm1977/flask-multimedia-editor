@@ -97,7 +97,7 @@ function syncOverlays() {
             videoEl.style.cssText =
                 'position:absolute;top:0;left:0;width:100%;height:100%;' +
                 'object-fit:contain;pointer-events:none;background:transparent;';
-            videoEl.muted = true;
+            videoEl.muted = false; // Audio independiente por track
             videoEl.preload = 'auto';
             videoEl.playsInline = true;
             layer.appendChild(videoEl);
@@ -256,6 +256,7 @@ function mainLoop() {
             var track = document.getElementById(trackId);
             if (!track) return;
 
+            var row = track.closest('.track-row');
             var clips = track.querySelectorAll('.timeline-clip:not([data-is-gap="true"])');
 
             // Sin clips → limpiar
@@ -279,9 +280,15 @@ function mainLoop() {
             // Verificar botón de ocultar
             if (isTrackHidden(trackId)) {
                 state.videoEl.style.opacity = '0';
+                state.videoEl.muted = true;
                 if (!state.videoEl.paused) state.videoEl.pause();
                 return;
             }
+
+            // Verificar botón de mute (independiente por track)
+            var muteBtn = row.querySelector('.track-mute-btn');
+            var isMuted = muteBtn && muteBtn.dataset.muted === 'true';
+            state.videoEl.muted = isMuted;
 
             // Cargar video si cambió el clip
             if (activeClip !== state.clip || !state.videoEl.src) {

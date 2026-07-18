@@ -123,12 +123,16 @@ function toggleMute(trackId, btn) {
         window.setTrackMuted(trackId, newMuted);
     }
 
-    // Para video-track, también controlar el video-player
-    if (trackId.startsWith('video-track')) {
+    // Track 1: controlar el video-player original
+    if (trackId === 'video-track') {
         const videoPlayer = document.getElementById('video-player');
         if (videoPlayer) {
             videoPlayer.muted = newMuted;
         }
+    }
+    // Tracks 2+: controlar el overlay video element
+    if (trackId.startsWith('video-track-') && typeof overlayState !== 'undefined' && overlayState[trackId]) {
+        overlayState[trackId].videoEl.muted = newMuted;
     }
 
     console.log('Mute toggle:', trackId, newMuted);
