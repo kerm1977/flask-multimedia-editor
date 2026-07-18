@@ -66,16 +66,7 @@ function setupVideoControls(videoPlayer) {
         });
     }
 
-    if (volumeBtn) {
-        volumeBtn.addEventListener('click', () => {
-            videoPlayer.muted = !videoPlayer.muted;
-            volumeBtn.innerHTML = videoPlayer.muted ? 
-                '<i class="bi bi-volume-mute"></i>' : 
-                '<i class="bi bi-volume-up"></i>';
-        });
-    }
-
-    // Speed control manejado por playbackSpeed.js (archivo independiente)
+    // Volume/mute manejado por trackMute.js (archivo independiente)
 }
 
 function setupTimeline() {

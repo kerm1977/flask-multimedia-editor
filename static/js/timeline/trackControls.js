@@ -115,34 +115,8 @@ function addControlsToTrackRow(row) {
     numBadge.parentNode.insertBefore(btnContainer, numBadge.nextSibling);
 }
 
-function toggleMute(trackId, btn) {
-    const isMuted = btn.dataset.muted === 'true';
-    const newMuted = !isMuted;
-
-    btn.dataset.muted = newMuted ? 'true' : 'false';
-    btn.innerHTML = newMuted
-        ? '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>'
-        : '<i class="bi bi-volume-up"></i>';
-
-    // Usar la función de audioPlaybackSync.js si está disponible
-    if (typeof window.setTrackMuted === 'function') {
-        window.setTrackMuted(trackId, newMuted);
-    }
-
-    // Track 1: controlar el video-player original
-    if (trackId === 'video-track') {
-        const videoPlayer = document.getElementById('video-player');
-        if (videoPlayer) {
-            videoPlayer.muted = newMuted;
-        }
-    }
-    // Tracks 2+: controlar el overlay video element
-    if (trackId.startsWith('video-track-') && typeof overlayState !== 'undefined' && overlayState[trackId]) {
-        overlayState[trackId].videoEl.muted = newMuted;
-    }
-
-    console.log('Mute toggle:', trackId, newMuted);
-}
+// MUTE: Toda la lógica de mute está en trackMute.js (archivo independiente)
+// No duplicar mute aquí. trackMute.js maneja el click del botón y el enforcement.
 
 function toggleHide(trackId, btn, track) {
     const isHidden = btn.dataset.hidden === 'true';

@@ -299,44 +299,22 @@ function mainLoop() {
         var track1Hidden = isTrackHidden('video-track');
 
         if (vp && track1Hidden) {
-            // Track 1 oculto: forzar ocultar y silenciar
+            // Track 1 oculto: forzar ocultar (mute manejado por trackMute.js)
             vp.style.setProperty('opacity', '0', 'important');
             vp.style.setProperty('visibility', 'hidden', 'important');
-            vp.muted = true;
             if (!track1WasHidden) {
-                console.log('Track 1 oculto y silenciado');
+                console.log('Track 1 oculto');
                 track1WasHidden = true;
             }
         } else if (vp && !track1Hidden && track1WasHidden) {
             // Transición de oculto → visible: restaurar UNA SOLA VEZ
             vp.style.removeProperty('opacity');
             vp.style.removeProperty('visibility');
-            // Solo desmutear si el botón de mute no está activo
-            var t1Row = document.getElementById('video-track');
-            if (t1Row) {
-                var row1 = t1Row.closest('.track-row');
-                var mBtn = row1 ? row1.querySelector('.track-mute-btn') : null;
-                if (!mBtn || mBtn.dataset.muted !== 'true') {
-                    vp.muted = false;
-                }
-            }
             console.log('Track 1 visible - blindado retoma control de opacity');
             track1WasHidden = false;
         }
-        // ⚠️ Si track1 no está oculto y track1WasHidden es false:
-        // NO hacemos nada con el opacity. El código blindado controla gaps.
-        // PERO: forzar mute si el botón de mute del track 1 está activo,
-        // porque el código blindado fuerza videoPlayer.muted = false en clips.
-        if (vp && !track1Hidden) {
-            var t1TrackEl = document.getElementById('video-track');
-            if (t1TrackEl) {
-                var t1RowEl = t1TrackEl.closest('.track-row');
-                var t1MuteBtn = t1RowEl ? t1RowEl.querySelector('.track-mute-btn') : null;
-                if (t1MuteBtn && t1MuteBtn.dataset.muted === 'true') {
-                    vp.muted = true;
-                }
-            }
-        }
+        // ⚠️ Mute: NO tocar vp.muted aquí. trackMute.js maneja todo el mute.
+        // ⚠️ Opacity: NO tocar cuando track1 no está oculto. Código blindado controla gaps.
 
         // ====================================================================
         // === CONTROL DE OVERLAYS (TRACKS 2+) ===
@@ -375,17 +353,12 @@ function mainLoop() {
             if (!activeClip) activeClip = clips[0];
 
             // Verificar botón de ocultar (independiente por track)
+            // Mute manejado por trackMute.js - no tocar muted aquí
             if (isTrackHidden(trackId)) {
                 state.videoEl.style.opacity = '0';
-                state.videoEl.muted = true;
                 if (!state.videoEl.paused) state.videoEl.pause();
                 return;
             }
-
-            // Verificar botón de mute (independiente por track)
-            var muteBtn = row.querySelector('.track-mute-btn');
-            var isMuted = muteBtn && muteBtn.dataset.muted === 'true';
-            state.videoEl.muted = isMuted;
 
             // Cargar video si cambió el clip activo
             if (activeClip !== state.clip || !state.videoEl.src) {
