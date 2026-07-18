@@ -31,8 +31,8 @@ function initPreviewControls() {
     bar.className = 'video-controls-bar d-flex align-items-center justify-content-center gap-3 px-3 py-2 bg-gradient-secondary rounded mt-2';
 
     bar.innerHTML =
-        '<button class="btn btn-primary rounded-circle" id="btn-play-pause" style="width: 42px; height: 42px;">' +
-            '<i class="bi bi-play-fill fs-5"></i>' +
+        '<button class="btn btn-primary rounded-circle d-flex justify-content-center align-items-center" id="btn-play-pause" style="width: 42px; height: 42px; padding: 0;">' +
+            '<i class="bi bi-play-fill fs-5" style="line-height: 1;"></i>' +
         '</button>' +
         '<div class="flex-grow-1" style="max-width: 400px;">' +
             '<div class="progress" style="height: 6px; cursor: pointer;" id="video-progress">' +
