@@ -213,42 +213,39 @@ function mainLoop() {
         var playing = (typeof isPlaying !== 'undefined' && isPlaying);
 
         // === Control de visibilidad del video-player (track 1) ===
-        // Usar setProperty con 'important' para sobrescribir el opacity:1
-        // que el código blindado setea cada frame con style.opacity = '1'
+        // IMPORTANTE: Solo tocamos el opacity del video-player cuando el track 1
+        // está oculto con el botón ojo. En TODOS los demás casos, el código blindado
+        // (timelinePlayheadCheckGap.js / timelinePlayhead.js) controla el opacity
+        // para manejar gaps (opacity:0) y clips (opacity:1).
         var vp = document.getElementById('video-player');
         var track1Hidden = isTrackHidden('video-track');
 
-        if (vp) {
-            if (track1Hidden) {
-                // Forzar ocultar y silenciar
-                vp.style.setProperty('opacity', '0', 'important');
-                vp.style.setProperty('visibility', 'hidden', 'important');
-                vp.muted = true;
-                if (!track1WasHidden) {
-                    console.log('Track 1 oculto y silenciado');
-                    track1WasHidden = true;
-                }
-            } else {
-                // Restaurar
-                if (track1WasHidden) {
-                    vp.style.removeProperty('opacity');
-                    vp.style.removeProperty('visibility');
-                    // Solo desmutear si el botón de mute no está activo
-                    var muteBtn = document.querySelector('#video-track') || null;
-                    var trackRow = vp.closest('.track-row');
-                    var t1Row = document.getElementById('video-track');
-                    if (t1Row) {
-                        var row = t1Row.closest('.track-row');
-                        var mBtn = row ? row.querySelector('.track-mute-btn') : null;
-                        if (!mBtn || mBtn.dataset.muted !== 'true') {
-                            vp.muted = false;
-                        }
-                    }
-                    console.log('Track 1 visible y con audio restaurado');
-                    track1WasHidden = false;
+        if (vp && track1Hidden) {
+            // Track 1 oculto: forzar ocultar y silenciar
+            vp.style.setProperty('opacity', '0', 'important');
+            vp.style.setProperty('visibility', 'hidden', 'important');
+            vp.muted = true;
+            if (!track1WasHidden) {
+                console.log('Track 1 oculto y silenciado');
+                track1WasHidden = true;
+            }
+        } else if (vp && !track1Hidden && track1WasHidden) {
+            // Transición de oculto → visible: restaurar una sola vez
+            vp.style.removeProperty('opacity');
+            vp.style.removeProperty('visibility');
+            var t1Row = document.getElementById('video-track');
+            if (t1Row) {
+                var row1 = t1Row.closest('.track-row');
+                var mBtn = row1 ? row1.querySelector('.track-mute-btn') : null;
+                if (!mBtn || mBtn.dataset.muted !== 'true') {
+                    vp.muted = false;
                 }
             }
+            console.log('Track 1 visible - blindado retoma control de opacity');
+            track1WasHidden = false;
         }
+        // Si track1 no está oculto y track1WasHidden es false:
+        // NO hacemos nada con el video-player. El código blindado controla gaps.
 
         // === Control de overlays (tracks 2+) ===
         Object.keys(overlayState).forEach(function(trackId) {
