@@ -14,7 +14,12 @@ function initVideoEditor() {
 }
 
 function setupVideoControls(videoPlayer) {
-    const playPauseBtn = document.getElementById('btn-play-pause');
+    var playPauseBtn = document.getElementById('btn-play-pause');
+    // Si previewControls.js aún no ha inyectado los controles, reintentar
+    if (!playPauseBtn) {
+        setTimeout(function() { setupVideoControls(videoPlayer); }, 100);
+        return;
+    }
     const progressBar = document.getElementById('video-progress');
     const volumeBtn = document.getElementById('btn-volume');
     const speedBtn = document.getElementById('btn-speed');
@@ -42,7 +47,10 @@ function setupVideoControls(videoPlayer) {
 
     if (playPauseBtn) {
         playPauseBtn.addEventListener('click', () => {
-            if (videoPlayer.paused) {
+            // Usar togglePlayPause (mismo que barra espaciadora) para sincronizar con timeline
+            if (typeof togglePlayPause === 'function') {
+                togglePlayPause();
+            } else if (videoPlayer.paused) {
                 videoPlayer.play();
             } else {
                 videoPlayer.pause();
