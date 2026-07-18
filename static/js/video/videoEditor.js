@@ -75,16 +75,7 @@ function setupVideoControls(videoPlayer) {
         });
     }
 
-    if (speedBtn) {
-        const speeds = [0.5, 1, 1.5, 2];
-        let currentSpeedIndex = 1;
-        
-        speedBtn.addEventListener('click', () => {
-            currentSpeedIndex = (currentSpeedIndex + 1) % speeds.length;
-            videoPlayer.playbackRate = speeds[currentSpeedIndex];
-            speedBtn.innerHTML = `<i class="bi bi-speedometer2"></i> ${speeds[currentSpeedIndex]}x`;
-        });
-    }
+    // Speed control manejado por playbackSpeed.js (archivo independiente)
 }
 
 function setupTimeline() {
@@ -108,7 +99,7 @@ function updateTimelinePlayhead(currentTime, duration) {
 
 function setupEditingTools() {
     const tools = [
-        'btn-split', 'btn-trim', 'btn-delete', 'btn-speed-control',
+        'btn-trim', 'btn-delete', 'btn-speed-control',
         'btn-volume-control', 'btn-add-text', 'btn-add-sticker',
         'btn-add-filter', 'btn-add-transition', 'btn-add-music',
         'btn-add-voiceover', 'btn-export'
