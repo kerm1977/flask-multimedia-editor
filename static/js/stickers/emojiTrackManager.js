@@ -628,7 +628,7 @@ function selectAllEmojiClips() {
 // Divide el clip en dos en la posicion actual del playhead.
 // ---------------------------------------------------------------------------
 function splitEmojiClip(clip) {
-    var playhead = document.getElementById('playhead');
+    var playhead = document.getElementById('timeline-playhead');
     if (!playhead) {
         console.log('X: no se encontro el playhead');
         return;
@@ -638,9 +638,12 @@ function splitEmojiClip(clip) {
     if (!track) return;
 
     // Posicion del playhead relativa al track
+    // Restar el padding del track (p-2 = 8px) porque los clips se posicionan
+    // relativo al padding box, no al border box.
     var trackRect = track.getBoundingClientRect();
     var playheadRect = playhead.getBoundingClientRect();
-    var playheadX = playheadRect.left - trackRect.left;
+    var trackPadding = parseInt(getComputedStyle(track).paddingLeft) || 0;
+    var playheadX = playheadRect.left - trackRect.left - trackPadding;
 
     var clipLeft = parseInt(clip.style.left) || 0;
     var clipWidth = parseInt(clip.style.width) || 50;
@@ -739,15 +742,13 @@ function observePlayhead() {
     setInterval(function() {
         if (allEmojiClips.length === 0) return;
 
-        var playhead = document.getElementById('playhead');
+        var playhead = document.getElementById('timeline-playhead');
         if (!playhead) return;
 
-        var track = document.getElementById(EMOJI_TRACK_ID);
-        if (!track) return;
-
-        var trackRect = track.getBoundingClientRect();
+        // El playhead tiene width 20px y la linea roja esta a 9px del left.
+        // La posicion real del playhead en pantalla es:
         var playheadRect = playhead.getBoundingClientRect();
-        var playheadX = playheadRect.left - trackRect.left;
+        var playheadCenterX = playheadRect.left + 9;
 
         allEmojiClips.forEach(function(clip) {
             var overlayId = clip.dataset.overlayId;
@@ -755,11 +756,11 @@ function observePlayhead() {
             var overlay = document.getElementById(overlayId);
             if (!overlay) return;
 
-            var clipLeft = parseInt(clip.style.left) || 0;
-            var clipWidth = parseInt(clip.style.width) || 50;
+            // Comparar posiciones reales en pantalla directamente
+            var clipRect = clip.getBoundingClientRect();
 
-            // Mostrar overlay si el playhead esta sobre el clip
-            if (playheadX >= clipLeft && playheadX <= clipLeft + clipWidth) {
+            // Mostrar overlay si el centro del playhead esta sobre el clip
+            if (playheadCenterX >= clipRect.left && playheadCenterX <= clipRect.right) {
                 overlay.style.display = '';
                 // Restaurar posicion guardada
                 if (clip.dataset.overlayX) {
@@ -770,5 +771,5 @@ function observePlayhead() {
                 overlay.style.display = 'none';
             }
         });
-    }, 100);
+    }, 50);
 }
