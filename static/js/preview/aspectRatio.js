@@ -1,7 +1,11 @@
 // ============================================================================
 // aspectRatio.js — Control de relación de aspecto del previsualizador
 //
-// Archivo independiente. Controla el botón #btn-fit-screen (icono bi-aspect-ratio).
+// Archivo principal. Lee las relaciones desde window.ASPECT_RATIOS,
+// que es poblada por archivos independientes en /aspectRatios/.
+//
+// Si un archivo de aspecto falla al cargar, los demás siguen funcionando
+// porque cada uno agrega su configuración independientemente a window.ASPECT_RATIOS.
 //
 // Funcionalidad:
 //   - Click izquierdo: cyclear relaciones de aspecto
@@ -9,34 +13,31 @@
 //   - Aplica la relación al .video-preview-container redimensionándolo
 //   - Tooltip al pasar el mouse: "Aspecto"
 //
-// Relaciones soportadas:
-//   1:1, 2:1, 4:5, 9:16, 16:9, 4:3, 3:4, 3:2, 2:3, 1:2, 5:4, 21:9
-//
 // IDs y clases que usa:
 //   - #btn-fit-screen: botón en la barra superior del previsualizador (HTML)
 //   - .video-preview-container: contenedor del video (HTML)
 //   - #video-player: elemento <video> dentro del contenedor
 //
 // Dependencias:
-//   - Ninguna (archivo independiente)
+//   - window.ASPECT_RATIOS: array poblado por archivos en /aspectRatios/
+//   - Los archivos en /aspectRatios/ deben cargarse ANTES que este archivo
+//
+// Archivos de aspectos (cada uno independiente):
+//   - aspect_1x1.js    → 1:1   (Cuadrado)
+//   - aspect_2x1.js    → 2:1
+//   - aspect_4x5.js    → 4:5   (Vertical)
+//   - aspect_9x16.js   → 9:16  (Stories / Reels)
+//   - aspect_16x9.js   → 16:9  (Widescreen / YouTube)
+//   - aspect_4x3.js    → 4:3   (TV clásica)
+//   - aspect_3x4.js    → 3:4   (Vertical clásica)
+//   - aspect_3x2.js    → 3:2   (Fotografía)
+//   - aspect_2x3.js    → 2:3   (Vertical fotografía)
+//   - aspect_1x2.js    → 1:2   (Vertical extremo)
+//   - aspect_5x4.js    → 5:4   (Monitores antiguos)
+//   - aspect_21x9.js   → 21:9  (Cine ultrapanorámico)
 // ============================================================================
 
-var ASPECT_RATIOS = [
-    { label: '1:1',   w: 1,  h: 1  },
-    { label: '2:1',   w: 2,  h: 1  },
-    { label: '4:5',   w: 4,  h: 5  },
-    { label: '9:16',  w: 9,  h: 16 },
-    { label: '16:9',  w: 16, h: 9  },
-    { label: '4:3',   w: 4,  h: 3  },
-    { label: '3:4',   w: 3,  h: 4  },
-    { label: '3:2',   w: 3,  h: 2  },
-    { label: '2:3',   w: 2,  h: 3  },
-    { label: '1:2',   w: 1,  h: 2  },
-    { label: '5:4',   w: 5,  h: 4  },
-    { label: '21:9',  w: 21, h: 9  }
-];
-
-var currentAspectIndex = 4; // 16:9 por defecto
+var currentAspectIndex = 0; // Se ajusta a 16:9 después de cargar
 
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAspectRatio);
@@ -54,6 +55,20 @@ function initAspectRatio() {
         return;
     }
 
+    // Verificar que window.ASPECT_RATIOS tenga datos
+    if (!window.ASPECT_RATIOS || window.ASPECT_RATIOS.length === 0) {
+        setTimeout(initAspectRatio, 100);
+        return;
+    }
+
+    // Buscar índice de 16:9 (relación por defecto)
+    for (var i = 0; i < window.ASPECT_RATIOS.length; i++) {
+        if (window.ASPECT_RATIOS[i].label === '16:9') {
+            currentAspectIndex = i;
+            break;
+        }
+    }
+
     // Tooltip
     btn.title = 'Aspecto';
 
@@ -65,8 +80,8 @@ function initAspectRatio() {
     newBtn.addEventListener('click', function(e) {
         e.preventDefault();
         e.stopPropagation();
-        currentAspectIndex = (currentAspectIndex + 1) % ASPECT_RATIOS.length;
-        applyAspectRatio(ASPECT_RATIOS[currentAspectIndex]);
+        currentAspectIndex = (currentAspectIndex + 1) % window.ASPECT_RATIOS.length;
+        applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
     });
 
     // Click derecho: menú contextual
@@ -76,16 +91,18 @@ function initAspectRatio() {
         showAspectMenu(e.clientX, e.clientY, newBtn);
     });
 
-    // Aplicar relación inicial (16:9)
-    applyAspectRatio(ASPECT_RATIOS[currentAspectIndex]);
+    // Aplicar relación inicial
+    applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
 
-    console.log('aspectRatio inicializado (botón #btn-fit-screen)');
+    console.log('aspectRatio inicializado -', window.ASPECT_RATIOS.length, 'relaciones cargadas');
 }
 
 // ---------------------------------------------------------------------------
 // Aplicar relación de aspecto al contenedor del previsualizador
 // ---------------------------------------------------------------------------
 function applyAspectRatio(ratio) {
+    if (!ratio) return;
+
     var container = document.querySelector('.video-preview-container');
     if (!container) return;
 
@@ -132,6 +149,9 @@ function showAspectMenu(x, y, parentBtn) {
     var existing = document.getElementById('aspect-context-menu');
     if (existing) existing.remove();
 
+    var ratios = window.ASPECT_RATIOS || [];
+    if (ratios.length === 0) return;
+
     var menu = document.createElement('div');
     menu.id = 'aspect-context-menu';
     menu.style.cssText =
@@ -145,7 +165,7 @@ function showAspectMenu(x, y, parentBtn) {
     title.textContent = 'Relación de aspecto';
     menu.appendChild(title);
 
-    ASPECT_RATIOS.forEach(function(ratio, i) {
+    ratios.forEach(function(ratio, i) {
         var item = document.createElement('div');
         item.style.cssText =
             'padding:6px 12px;cursor:pointer;border-radius:4px;color:#fff;font-size:14px;' +
@@ -177,8 +197,13 @@ function showAspectMenu(x, y, parentBtn) {
     reset.addEventListener('mouseenter', function() { reset.style.background = '#3a3a3a'; });
     reset.addEventListener('mouseleave', function() { reset.style.background = ''; });
     reset.addEventListener('click', function() {
-        currentAspectIndex = 4; // 16:9
-        applyAspectRatio(ASPECT_RATIOS[currentAspectIndex]);
+        for (var i = 0; i < ratios.length; i++) {
+            if (ratios[i].label === '16:9') {
+                currentAspectIndex = i;
+                applyAspectRatio(ratios[i]);
+                break;
+            }
+        }
         menu.remove();
     });
     menu.appendChild(reset);

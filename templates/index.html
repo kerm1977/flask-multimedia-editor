@@ -510,6 +510,20 @@
     <script src="{{ url_for('static', filename='js/canvas/layers.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewResizer.js') }}"></script>
+    <!-- Aspectos independientes: si uno falla, los demás siguen funcionando -->
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_1x1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_2x1.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_4x5.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_9x16.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_16x9.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_4x3.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_3x4.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_3x2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_2x3.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_1x2.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_5x4.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_21x9.js') }}"></script>
+    <!-- Archivo principal que lee window.ASPECT_RATIOS (debe cargarse después de los aspectos) -->
     <script src="{{ url_for('static', filename='js/preview/aspectRatio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoPlayer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoEditor.js') }}"></script>
