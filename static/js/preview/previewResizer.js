@@ -51,6 +51,9 @@ function initPreviewResizer() {
     }
 
     // Variables de arrastre
+    // ⚠️ El resizer cambia la altura del PANEL (#video-preview-panel), no del
+    // contenedor. aspectRatio.js tiene un ResizeObserver que detecta el cambio
+    // y re-aplica la proporción del aspecto al contenedor automáticamente.
     var isDragging = false;
     var startY = 0;
     var startHeight = 0;
@@ -58,7 +61,8 @@ function initPreviewResizer() {
     resizer.addEventListener('mousedown', function(e) {
         isDragging = true;
         startY = e.clientY;
-        startHeight = videoContainer.offsetHeight;
+        // ⚠️ Medir la altura del panel, no del contenedor
+        startHeight = previewPanel.offsetHeight;
         resizer.style.background = '#007bff';
         document.body.style.cursor = 'ns-resize';
         document.body.style.userSelect = 'none';
@@ -68,8 +72,11 @@ function initPreviewResizer() {
     document.addEventListener('mousemove', function(e) {
         if (!isDragging) return;
         var deltaY = e.clientY - startY;
-        var newHeight = Math.max(150, Math.min(800, startHeight + deltaY));
-        videoContainer.style.height = newHeight + 'px';
+        // ⚠️ Cambiar la altura del panel. El ResizeObserver de aspectRatio.js
+        // detectará el cambio y re-aplicará el aspecto al contenedor.
+        var newHeight = Math.max(200, Math.min(1200, startHeight + deltaY));
+        previewPanel.style.height = newHeight + 'px';
+        previewPanel.style.flex = 'none';
     });
 
     document.addEventListener('mouseup', function() {
@@ -85,7 +92,8 @@ function initPreviewResizer() {
     resizer.addEventListener('touchstart', function(e) {
         isDragging = true;
         startY = e.touches[0].clientY;
-        startHeight = videoContainer.offsetHeight;
+        // ⚠️ Medir la altura del panel, no del contenedor
+        startHeight = previewPanel.offsetHeight;
         resizer.style.background = '#007bff';
         e.preventDefault();
     }, { passive: false });
@@ -93,8 +101,11 @@ function initPreviewResizer() {
     document.addEventListener('touchmove', function(e) {
         if (!isDragging) return;
         var deltaY = e.touches[0].clientY - startY;
-        var newHeight = Math.max(150, Math.min(800, startHeight + deltaY));
-        videoContainer.style.height = newHeight + 'px';
+        // ⚠️ Cambiar la altura del panel. El ResizeObserver de aspectRatio.js
+        // detectará el cambio y re-aplicará el aspecto al contenedor.
+        var newHeight = Math.max(200, Math.min(1200, startHeight + deltaY));
+        previewPanel.style.height = newHeight + 'px';
+        previewPanel.style.flex = 'none';
         e.preventDefault();
     }, { passive: false });
 

@@ -77,6 +77,12 @@
 // ⚠️ NO RENOMBRAR esta variable. Es usada por ambos botones sincronizados.
 var currentAspectIndex = 0; // Se ajusta a 16:9 después de cargar
 
+// ⚠️ NO RENOMBRAR. Guarda la relación actual para re-aplicar al redimensionar.
+var currentRatio = null;
+
+// ⚠️ NO RENOMBRAR. Es el ResizeObserver que detecta cambios de tamaño del panel.
+var aspectResizeObserver = null;
+
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', initAspectRatio);
 } else {
@@ -179,6 +185,26 @@ function initAspectRatio() {
     // Aplicar relación inicial (16:9 por defecto)
     applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
 
+    // ⚠️ ResizeObserver: detectar cambios de tamaño del panel del previsualizador
+    // Cuando el usuario arrastra el resizer o cambia el tamaño de la ventana,
+    // re-aplicar el aspecto para que el contenedor se ajuste y nunca se oculte.
+    var panel = document.getElementById('video-preview-panel');
+    if (panel && typeof ResizeObserver !== 'undefined') {
+        aspectResizeObserver = new ResizeObserver(function() {
+            if (currentRatio) {
+                applyAspectRatio(currentRatio);
+            }
+        });
+        aspectResizeObserver.observe(panel);
+    }
+
+    // ⚠️ También re-aplicar al redimensionar la ventana del navegador
+    window.addEventListener('resize', function() {
+        if (currentRatio) {
+            applyAspectRatio(currentRatio);
+        }
+    });
+
     console.log('aspectRatio inicializado -', window.ASPECT_RATIOS.length, 'relaciones cargadas');
 }
 
@@ -186,8 +212,9 @@ function initAspectRatio() {
 // applyAspectRatio(ratio)
 // ---------------------------------------------------------------------------
 // Redimensiona .video-preview-container según la relación seleccionada.
-// Actualiza el label de AMBOS botones (#btn-fit-screen y #btn-trim) para
-// que siempre muestren la relación actual sincronizada.
+// Calcula el tamaño que cabe TANTO en el ancho disponible COMO en el alto
+// disponible, manteniendo SIEMPRE la proporción del aspecto.
+// El contenedor nunca se oculta detrás de la barra de controles.
 //
 // Parámetros:
 //   - ratio: objeto { label, w, h } de window.ASPECT_RATIOS
@@ -198,41 +225,75 @@ function initAspectRatio() {
 //   - #btn-trim: innerHTML (icono + label), title (tooltip)
 //
 // Cálculo:
-//   - height = (parentWidth * ratio.h) / ratio.w
-//   - Si height > 70% del viewport: limitar y centrar con margin auto
-//   - Si no: width 100%, height calculada
+//   1. Obtener espacio disponible del padre (#video-preview-panel):
+//      - Ancho disponible = parent.clientWidth - padding
+//      - Alto disponible = parent.clientHeight - header - controles - padding - resizer
+//   2. Calcular height por ancho: heightW = availWidth * (h/w)
+//   3. Calcular width por alto: widthH = availHeight * (w/h)
+//   4. Si heightW > availHeight: usar widthH y heightW limitada (cabe por alto)
+//      Si no: usar availWidth y heightW (cabe por ancho)
+//   5. Centrar horizontalmente con margin auto
 // ---------------------------------------------------------------------------
 function applyAspectRatio(ratio) {
     if (!ratio) return;
+
+    // ⚠️ Guardar la relación actual para re-aplicar al redimensionar
+    currentRatio = ratio;
 
     // ⚠️ .video-preview-container está en HTML línea ~216
     var container = document.querySelector('.video-preview-container');
     if (!container) return;
 
-    var parent = container.parentElement;
+    var parent = container.parentElement; // #video-preview-panel
     if (!parent) return;
 
-    // Obtener ancho disponible del padre
-    var parentWidth = parent.clientWidth;
+    // === Calcular espacio disponible ===
+    // Ancho disponible: ancho del panel menos padding (p-3 = 16px cada lado)
+    var parentStyle = window.getComputedStyle(parent);
+    var padLeft = parseFloat(parentStyle.paddingLeft) || 0;
+    var padRight = parseFloat(parentStyle.paddingRight) || 0;
+    var padTop = parseFloat(parentStyle.paddingTop) || 0;
+    var padBottom = parseFloat(parentStyle.paddingBottom) || 0;
+    var availWidth = parent.clientWidth - padLeft - padRight;
 
-    // Calcular altura basada en la relación: height = ancho * (h/w)
-    var height = (parentWidth * ratio.h) / ratio.w;
+    // Alto disponible: alto del panel menos header, controles, padding
+    // Header: .panel-header (tamaño aproximado 50px con border-bottom y margin)
+    var header = parent.querySelector('.panel-header');
+    var headerHeight = header ? header.offsetHeight : 0;
+    // Controles: #preview-controls-host
+    var controls = parent.querySelector('#preview-controls-host');
+    var controlsHeight = controls ? controls.offsetHeight : 0;
+    // Margen entre header y container (mb-3 = 16px)
+    var headerMargin = header ? (parseFloat(window.getComputedStyle(header).marginBottom) || 0) : 0;
 
-    // Limitar altura para no desbordar (max 70% del viewport)
-    var maxHeight = window.innerHeight * 0.7;
-    if (height > maxHeight) {
-        height = maxHeight;
-        var width = (height * ratio.w) / ratio.h;
-        container.style.width = width + 'px';
-        container.style.height = height + 'px';
-        container.style.marginLeft = 'auto';
-        container.style.marginRight = 'auto';
+    var availHeight = parent.clientHeight - padTop - padBottom - headerHeight - headerMargin - controlsHeight;
+
+    // ⚠️ Restar un margen de seguridad (8px) para evitar que se oculte
+    availHeight = Math.max(availHeight - 8, 100);
+
+    // === Calcular dimensiones manteniendo proporción ===
+    // Height si usamos todo el ancho disponible
+    var heightByWidth = (availWidth * ratio.h) / ratio.w;
+    // Width si usamos todo el alto disponible
+    var widthByHeight = (availHeight * ratio.w) / ratio.h;
+
+    var finalWidth, finalHeight;
+
+    if (heightByWidth <= availHeight) {
+        // Cabe por ancho: usar todo el ancho
+        finalWidth = availWidth;
+        finalHeight = heightByWidth;
     } else {
-        container.style.width = '100%';
-        container.style.height = height + 'px';
-        container.style.marginLeft = '';
-        container.style.marginRight = '';
+        // No cabe por ancho: limitar por alto
+        finalWidth = widthByHeight;
+        finalHeight = availHeight;
     }
+
+    // Aplicar dimensiones
+    container.style.width = finalWidth + 'px';
+    container.style.height = finalHeight + 'px';
+    container.style.marginLeft = 'auto';
+    container.style.marginRight = 'auto';
 
     // ⚠️ Actualizar label de AMBOS botones sincronizados
     // #btn-fit-screen: barra superior del previsualizador (HTML línea ~208)
@@ -248,7 +309,7 @@ function applyAspectRatio(ratio) {
         trimBtn.title = 'Aspecto: ' + ratio.label;
     }
 
-    console.log('aspectRatio: aplicado', ratio.label);
+    console.log('aspectRatio: aplicado', ratio.label, '- ' + Math.round(finalWidth) + 'x' + Math.round(finalHeight));
 }
 
 // ---------------------------------------------------------------------------
