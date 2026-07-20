@@ -205,11 +205,11 @@
                             <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
                                 <h6 class="m-0 fw-bold"><i class="bi bi-play-circle me-2"></i>Vista Previa</h6>
                                 <div class="d-flex gap-2">
-                                    <button class="btn btn-sm btn-outline-light" id="btn-fit-screen">
-                                        <i class="bi bi-aspect-ratio"></i>
+                                    <button class="btn btn-outline-light" id="btn-fit-screen" title="Aspecto" style="padding: 6px 10px;">
+                                        <i class="bi bi-aspect-ratio fs-5"></i>
                                     </button>
-                                    <button class="btn btn-sm btn-outline-light" id="btn-fullscreen">
-                                        <i class="bi bi-fullscreen"></i>
+                                    <button class="btn btn-outline-light" id="btn-fullscreen" title="Pantalla completa" style="padding: 6px 10px;">
+                                        <i class="bi bi-fullscreen fs-5"></i>
                                     </button>
                                 </div>
                             </div>
@@ -510,6 +510,7 @@
     <script src="{{ url_for('static', filename='js/canvas/layers.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewResizer.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/preview/aspectRatio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoPlayer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoEditor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/timeline.js') }}"></script>
