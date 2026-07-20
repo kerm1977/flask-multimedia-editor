@@ -294,6 +294,7 @@
                                 <button class="btn btn-outline-light" id="btn-add-text" title="Texto" style="padding: 6px 10px;">
                                     <i class="bi bi-type fs-5"></i>
                                 </button>
+                                <!-- BLINDADO: #btn-add-sticker controla panel de emojis/stickers via emojiStickerPanel.js. NO agregar a setupEditingTools(). -->
                                 <button class="btn btn-outline-light" id="btn-add-sticker" title="Sticker" style="padding: 6px 10px;">
                                     <i class="bi bi-emoji-smile fs-5"></i>
                                 </button>
@@ -577,6 +578,11 @@
     <script src="{{ url_for('static', filename='js/audio/audioEditor.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioConvert.js') }}"></script>
     <script src="{{ url_for('static', filename='js/audio/audioImportExport.js') }}"></script>
+    <!-- BLINDADO: emojis.js y stickers.js DEBEN cargarse antes que emojiStickerPanel.js -->
+    <script src="{{ url_for('static', filename='js/stickers/emojis.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/stickers/stickers.js') }}"></script>
+    <!-- BLINDADO: emojiStickerPanel.js controla #btn-add-sticker. NO agregar a setupEditingTools() en videoEditor.js. -->
+    <script src="{{ url_for('static', filename='js/stickers/emojiStickerPanel.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryInit.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryUpload.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryDisplay.js') }}"></script>

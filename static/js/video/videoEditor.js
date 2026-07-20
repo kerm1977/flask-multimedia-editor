@@ -94,11 +94,12 @@ function updateTimelinePlayhead(currentTime, duration) {
 //   - 'btn-delete': controlado por deleteClip.js (eliminar clip)
 //   - 'btn-speed-control': controlado por playbackSpeed.js (velocidad)
 //   - 'btn-volume-control': controlado por globalMute.js (mute global)
+//   - 'btn-add-sticker': controlado por emojiStickerPanel.js (emojis/stickers)
 // Si se vuelven a agregar, mostrarán alert "Funcionalidad en desarrollo"
 // en lugar de su funcionalidad real.
 function setupEditingTools() {
     const tools = [
-        'btn-add-text', 'btn-add-sticker',
+        'btn-add-text',
         'btn-add-filter', 'btn-add-transition', 'btn-add-music',
         'btn-add-voiceover', 'btn-export'
     ];
@@ -114,7 +115,6 @@ function setupEditingTools() {
 function handleToolClick(toolId) {
     const toolNames = {
         'btn-add-text': 'Agregar texto',
-        'btn-add-sticker': 'Agregar sticker',
         'btn-add-filter': 'Agregar filtro',
         'btn-add-transition': 'Agregar transición',
         'btn-add-music': 'Agregar música',
