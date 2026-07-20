@@ -96,7 +96,64 @@ try {
 function initEmojiTrackManager() {
     document.addEventListener('keydown', handleEmojiKeyboard);
     observePlayhead();
+    createUnifiedPlayheadLine();
     console.log('emojiTrackManager inicializado');
+}
+
+// ---------------------------------------------------------------------------
+// createUnifiedPlayheadLine()
+// ---------------------------------------------------------------------------
+// Crea una linea roja visual que se extiende sobre TODOS los tracks,
+// sincronizada con el playhead principal (#timeline-playhead).
+// No reemplaza el playhead real (que sigue en video-track).
+// Solo es una linea visual que da la ilusion de un playhead unificado.
+// ---------------------------------------------------------------------------
+function createUnifiedPlayheadLine() {
+    // Esperar a que el playhead principal exista
+    function tryCreate() {
+        var mainPlayhead = document.getElementById('timeline-playhead');
+        if (!mainPlayhead) {
+            setTimeout(tryCreate, 200);
+            return;
+        }
+
+        var tracksContainer = document.querySelector('.tracks-container');
+        if (!tracksContainer) {
+            setTimeout(tryCreate, 200);
+            return;
+        }
+
+        // Crear linea unificada
+        var line = document.getElementById('unified-playhead-line');
+        if (!line) {
+            line = document.createElement('div');
+            line.id = 'unified-playhead-line';
+            line.style.cssText =
+                'position:absolute;top:0;width:2px;height:100%;' +
+                'background-color:#ff0000;box-shadow:0 0 4px #ff0000;' +
+                'z-index:998;pointer-events:none;left:0px;';
+            tracksContainer.style.position = 'relative';
+            tracksContainer.appendChild(line);
+        }
+
+        // Sincronizar la linea con el playhead principal en cada frame
+        function syncLine() {
+            if (!mainPlayhead || !mainPlayhead.parentElement) {
+                mainPlayhead = document.getElementById('timeline-playhead');
+            }
+            if (mainPlayhead && mainPlayhead.parentElement) {
+                // Calcular posicion relativa al tracks-container
+                var mainRect = mainPlayhead.getBoundingClientRect();
+                var containerRect = tracksContainer.getBoundingClientRect();
+                // El centro del playhead (linea roja a 9px del left del playhead)
+                var centerX = mainRect.left + 9 - containerRect.left;
+                line.style.left = centerX + 'px';
+            }
+            requestAnimationFrame(syncLine);
+        }
+        requestAnimationFrame(syncLine);
+    }
+    tryCreate();
 }
 
 // ---------------------------------------------------------------------------
