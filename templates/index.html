@@ -205,6 +205,7 @@
                             <div class="panel-header d-flex align-items-center justify-content-between mb-3 pb-2 border-bottom border-secondary">
                                 <h6 class="m-0 fw-bold"><i class="bi bi-play-circle me-2"></i>Vista Previa</h6>
                                 <div class="d-flex gap-2">
+                                    <!-- ⚠️ BLINDADO: #btn-fit-screen controla aspecto via aspectRatio.js. NO agregar otros listeners. -->
                                     <button class="btn btn-outline-light" id="btn-fit-screen" title="Aspecto" style="padding: 6px 10px;">
                                         <i class="bi bi-aspect-ratio fs-5"></i>
                                     </button>
@@ -276,7 +277,8 @@
                                 <button class="btn btn-outline-light" id="btn-split" title="Dividir" style="padding: 6px 10px;">
                                     <i class="bi bi-scissors fs-5"></i>
                                 </button>
-                                <button class="btn btn-outline-light" id="btn-trim" title="Recortar" style="padding: 6px 10px;">
+                                <!-- ⚠️ BLINDADO: #btn-trim controla aspecto via aspectRatio.js. NO agregar a setupEditingTools() en videoEditor.js. -->
+                                <button class="btn btn-outline-light" id="btn-trim" title="Aspecto" style="padding: 6px 10px;">
                                     <i class="bi bi-aspect-ratio fs-5"></i>
                                 </button>
                                 <button class="btn btn-outline-light" id="btn-delete" title="Eliminar" style="padding: 6px 10px;">
@@ -510,7 +512,9 @@
     <script src="{{ url_for('static', filename='js/canvas/layers.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/previewResizer.js') }}"></script>
-    <!-- Aspectos independientes: si uno falla, los demás siguen funcionando -->
+    <!-- ⚠️ BLINDADO: Aspectos independientes. Si uno falla, los demás siguen funcionando. -->
+    <!-- ⚠️ NO cambiar el orden. Estos DEBEN cargarse ANTES que aspectRatio.js. -->
+    <!-- ⚠️ NO agregar listeners a #btn-fit-screen o #btn-trim desde otros archivos. -->
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_1x1.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_2x1.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_4x5.js') }}"></script>
@@ -523,7 +527,7 @@
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_1x2.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_5x4.js') }}"></script>
     <script src="{{ url_for('static', filename='js/preview/aspectRatios/aspect_21x9.js') }}"></script>
-    <!-- Archivo principal que lee window.ASPECT_RATIOS (debe cargarse después de los aspectos) -->
+    <!-- ⚠️ BLINDADO: aspectRatio.js lee window.ASPECT_RATIOS. DEBE cargarse DESPUÉS de los aspectos. -->
     <script src="{{ url_for('static', filename='js/preview/aspectRatio.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoPlayer.js') }}"></script>
     <script src="{{ url_for('static', filename='js/video/videoEditor.js') }}"></script>

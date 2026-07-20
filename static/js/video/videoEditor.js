@@ -88,6 +88,13 @@ function updateTimelinePlayhead(currentTime, duration) {
     playhead.style.left = position + 'px';
 }
 
+// ⚠️ BLINDADO: NO agregar estos botones a la lista de tools:
+//   - 'btn-trim': controlado por aspectRatio.js (relación de aspecto)
+//   - 'btn-split': controlado por splitClip.js (dividir clip)
+//   - 'btn-delete': controlado por deleteClip.js (eliminar clip)
+//   - 'btn-speed-control': controlado por playbackSpeed.js (velocidad)
+// Si se vuelven a agregar, mostrarán alert "Funcionalidad en desarrollo"
+// en lugar de su funcionalidad real.
 function setupEditingTools() {
     const tools = [
         'btn-volume-control', 'btn-add-text', 'btn-add-sticker',
