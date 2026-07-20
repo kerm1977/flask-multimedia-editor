@@ -1,0 +1,194 @@
+/* ============================================================================
+   BLINDADO / NO MODIFICAR SIN AUTORIZACION
+   responsiveLayout.css - Layout responsivo para el editor de video
+
+   Archivo TOTALMENTE INDEPENDIENTE. No modifica estilos existentes.
+
+   FUNCIONALIDAD:
+     - Minimo absoluto: 600px. Debajo de eso, scroll horizontal oculto
+       (la rueda del mouse hace scroll horizontal via horizontalWheelScroll.js)
+     - En pantallas grandes (>1200px): layout normal
+     - En pantallas medianas (768px-1200px): vista previa se comprime,
+       biblioteca colapsable a la izquierda (controlada por libraryCollapse.js)
+     - En pantallas pequeñas (600px-768px): todo apilado verticalmente
+     - La biblioteca es colapsable hacia la izquierda (libraryCollapse.js)
+     - La timeline NUNCA se oculta (inicio y final siempre visibles)
+     - La toolbar de botones se ajusta con flex-wrap
+
+   ARQUITECTURA:
+     - sidebar (editor) | biblioteca (colapsable) | vista previa | timeline
+     - sidebar: colapsable por hover (sidebarCollapse.js)
+     - biblioteca: colapsable por boton (libraryCollapse.js)
+     - Al colapsar biblioteca, vista previa ocupa TODO el ancho
+
+   NO TOCAR:
+     - Cualquier archivo CSS o JS existente
+   ============================================================================ */
+
+/* === MINIMO ABSOLUTO: 600px === */
+/* El contenido no se comprime mas de 600px de ancho.
+   La rueda del mouse hace scroll horizontal (via horizontalWheelScroll.js).
+   La barra de scroll horizontal se oculta visualmente. */
+html {
+    min-width: 600px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar {
+    display: none;
+}
+
+body {
+    min-width: 600px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+body::-webkit-scrollbar {
+    display: none;
+}
+
+/* === OVERRIDE CRUCIAL: Sobrescribir estilos inline del HTML === */
+/* La biblioteca ahora esta a la izquierda (movida por libraryCollapse.js).
+   La vista previa ocupa todo el espacio restante. */
+
+/* En pantallas grandes (>1200px): layout normal */
+@media (min-width: 1201px) {
+    #video-preview-panel {
+        flex: 1 1 auto !important;
+        min-width: 300px !important;
+    }
+}
+
+/* === PANTALLA MEDIANA (768px - 1200px) === */
+/* Biblioteca colapsable a la izquierda, vista previa ocupa el resto */
+@media (max-width: 1200px) {
+    #video-section > .d-flex.gap-3 {
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 6px !important;
+    }
+
+    /* Vista previa: ocupa todo el espacio disponible */
+    #video-preview-panel {
+        flex: 1 1 auto !important;
+        min-width: 200px !important;
+        max-width: 100% !important;
+    }
+
+    .video-preview-container {
+        height: 280px !important;
+    }
+}
+
+/* A 900px la vista previa se ajusta, biblioteca sigue visible (colapsable) */
+@media (max-width: 900px) {
+    #video-preview-panel {
+        flex: 1 1 auto !important;
+        min-width: 180px !important;
+    }
+
+    .video-preview-container {
+        height: 240px !important;
+    }
+}
+
+/* === PANTALLA PEQUENA (600px - 768px) === */
+/* Recien a 768px apilamos verticalmente */
+@media (max-width: 768px) {
+    #video-section {
+        gap: 8px !important;
+    }
+
+    #video-section > .d-flex.gap-3 {
+        flex-direction: column !important;
+        gap: 8px !important;
+        overflow: visible !important;
+    }
+
+    #video-preview-panel {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        padding: 8px !important;
+    }
+
+    .video-preview-container {
+        height: 200px !important;
+    }
+
+    /* Biblioteca: todo el ancho cuando se apila verticalmente */
+    #library-panel {
+        flex: 1 1 auto !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        padding: 8px !important;
+    }
+
+    #library-files-grid {
+        max-height: 160px !important;
+    }
+
+    #timeline-panel {
+        padding: 8px !important;
+    }
+
+    #timeline-panel .panel-header > div:first-child,
+    #timeline-panel .panel-header .d-flex {
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+    }
+
+    #timeline-panel .btn {
+        padding: 4px 6px !important;
+    }
+
+    #timeline-panel .btn i {
+        font-size: 0.9rem !important;
+    }
+
+    #timeline-panel .panel-header > div > div[style*="width:1px"] {
+        margin: 0 4px !important;
+    }
+
+    .panel-header {
+        padding-bottom: 4px !important;
+        margin-bottom: 8px !important;
+    }
+
+    #video-preview-panel .panel-header .d-flex.gap-2 {
+        gap: 4px !important;
+    }
+
+    #video-preview-panel .panel-header .btn {
+        padding: 4px 6px !important;
+    }
+
+    .draggable-panel {
+        padding: 8px !important;
+    }
+
+    #preview-controls-host {
+        font-size: 0.85rem !important;
+    }
+}
+
+@media (max-width: 620px) {
+    #video-section {
+        min-width: 580px !important;
+    }
+
+    #timeline-panel .panel-header > div:first-child,
+    #timeline-panel .panel-header .d-flex {
+        flex-wrap: wrap !important;
+    }
+
+    .video-preview-container {
+        height: 160px !important;
+    }
+}

@@ -7,6 +7,8 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    <!-- BLINDADO: responsiveLayout.css layout responsivo, minimo 600px. Archivo independiente. -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/responsiveLayout.css') }}">
     <style>
         /* Agrandar todos los iconos 12px total */
         .bi { font-size: calc(1em + 12px) !important; }
@@ -517,6 +519,12 @@
     <script src="{{ url_for('static', filename='js/stickers/toolbarReorganize.js') }}"></script>
     <!-- BLINDADO: fullscreenMode.js pantalla completa del area de vista previa. Archivo independiente. -->
     <script src="{{ url_for('static', filename='js/stickers/fullscreenMode.js') }}"></script>
+    <!-- BLINDADO: fullscreenControls.js controles en pantalla completa (seek, volumen, captura PNG). Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/fullscreenControls.js') }}"></script>
+    <!-- BLINDADO: horizontalWheelScroll.js scroll horizontal con rueda del mouse. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/horizontalWheelScroll.js') }}"></script>
+    <!-- BLINDADO: libraryCollapse.js biblioteca colapsable al lado izquierdo. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/libraryCollapse.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/fabMenu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/draggablePanels.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/navigation.js') }}"></script>
