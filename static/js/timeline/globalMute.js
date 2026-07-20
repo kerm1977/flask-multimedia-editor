@@ -88,13 +88,52 @@ function initGlobalMute() {
 // toggleGlobalMute()
 // ---------------------------------------------------------------------------
 // Alterna el mute global entre true y false.
-// Actualiza el icono del botón #btn-volume-control.
-// NO cambia el estado de los botones de mute individuales de cada track.
+//
+// Al ACTIVAR (globalMuted = true):
+//   - Setea TODOS los .track-mute-btn a data-muted=true
+//   - Actualiza los iconos de cada track para mostrar mute
+//   - El botón #btn-volume-control muestra icono de mute
+//
+// Al DESACTIVAR (globalMuted = false):
+//   - NO cambia el estado individual de los tracks
+//   - Cada track mantiene el estado que tenía (todos muteados si fueron
+//     muteados por el global, o el que el usuario les ponga después)
+//   - El botón #btn-volume-control muestra icono de volumen normal
 // ---------------------------------------------------------------------------
 function toggleGlobalMute() {
     globalMuted = !globalMuted;
     updateGlobalMuteButton(globalMuted);
+
+    if (globalMuted) {
+        // Mute TODOS los tracks individualmente para que sus iconos reflejen el mute
+        muteAllTracks();
+    }
+
     console.log('globalMute:', globalMuted ? 'TODAS las pistas silenciadas' : 'mute global desactivado');
+}
+
+// ---------------------------------------------------------------------------
+// muteAllTracks()
+// ---------------------------------------------------------------------------
+// Setea data-muted=true en TODOS los .track-mute-btn y actualiza sus iconos.
+// Esto hace que los iconos de cada track muestren el estado de mute.
+// ---------------------------------------------------------------------------
+function muteAllTracks() {
+    var muteBtns = document.querySelectorAll('.track-mute-btn');
+    muteBtns.forEach(function(btn) {
+        btn.dataset.muted = 'true';
+        btn.innerHTML = '<i class="bi bi-volume-mute" style="color:#e53e3e;"></i>';
+    });
+
+    // También sincronizar el #btn-volume del previsualizador (track 1)
+    var volBtn = document.getElementById('btn-volume');
+    if (volBtn) {
+        volBtn.dataset.muted = 'true';
+        volBtn.className = 'bi bi-volume-mute';
+        if (volBtn.style) volBtn.style.color = '#e53e3e';
+    }
+
+    console.log('globalMute: todos los tracks muteados');
 }
 
 // ---------------------------------------------------------------------------
@@ -127,28 +166,48 @@ function updateGlobalMuteButton(isMuted) {
 function globalMuteEnforceLoop() {
     try {
         if (globalMuted) {
-            // === Track 1 (video-track) → #video-player ===
-            var vp = document.getElementById('video-player');
-            if (vp) {
-                vp.muted = true;
-            }
+            // === Detectar si algún track fue desmuteado individualmente ===
+            // Si un track tiene data-muted=false, el usuario lo desmuteó.
+            // En ese caso, desactivar el mute global. Ese track sonará,
+            // los demás quedan muteados (su data-muted sigue en true).
+            var muteBtns = document.querySelectorAll('.track-mute-btn');
+            var anyUnmuted = false;
+            muteBtns.forEach(function(btn) {
+                if (btn.dataset.muted === 'false') {
+                    anyUnmuted = true;
+                }
+            });
 
-            // === Tracks 2+ (video-track-2, etc.) → overlays ===
-            if (typeof overlayState !== 'undefined') {
-                Object.keys(overlayState).forEach(function(trackId) {
-                    if (overlayState[trackId] && overlayState[trackId].videoEl) {
-                        overlayState[trackId].videoEl.muted = true;
+            if (anyUnmuted) {
+                // Desactivar mute global: el botón global se desmuta
+                globalMuted = false;
+                updateGlobalMuteButton(false);
+                console.log('globalMute: desactivado porque un track fue desmuteado individualmente');
+            } else {
+                // === Enforce mute en todos los elementos ===
+                // Track 1 (video-track) → #video-player
+                var vp = document.getElementById('video-player');
+                if (vp) {
+                    vp.muted = true;
+                }
+
+                // Tracks 2+ (video-track-2, etc.) → overlays
+                if (typeof overlayState !== 'undefined') {
+                    Object.keys(overlayState).forEach(function(trackId) {
+                        if (overlayState[trackId] && overlayState[trackId].videoEl) {
+                            overlayState[trackId].videoEl.muted = true;
+                        }
+                    });
+                }
+
+                // Audio tracks → silenciar
+                var audioTracks = document.querySelectorAll('.track-track[id^="audio-track"]');
+                audioTracks.forEach(function(track) {
+                    if (typeof window.setTrackMuted === 'function') {
+                        window.setTrackMuted(track.id, true);
                     }
                 });
             }
-
-            // === Audio tracks → silenciar ===
-            var audioTracks = document.querySelectorAll('.track-track[id^="audio-track"]');
-            audioTracks.forEach(function(track) {
-                if (typeof window.setTrackMuted === 'function') {
-                    window.setTrackMuted(track.id, true);
-                }
-            });
         }
     } catch (err) {
         // Silenciar errores para no romper el loop
