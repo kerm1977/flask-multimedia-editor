@@ -1,11 +1,60 @@
 // ============================================================================
+// ⚠️  BLINDADO / NO MODIFICAR SIN AUTORIZACIÓN ⚠️
+// ============================================================================
 // previewResizer.js — Redimensionamiento vertical del previsualizador
 //
 // Permite arrastrar el borde inferior del previsualizador para cambiar su altura.
 // El timeline se empuja hacia abajo automáticamente.
 //
 // Funciona insertando un divisor (resize handle) entre el panel de previsualización
-// y el timeline. Al arrastrar, se ajusta la altura del .video-preview-container.
+// y el timeline. Al arrastrar, se ajusta la altura del PANEL.
+//
+// ────────────────────────────────────────────────────────────────────────────
+// CÓMO FUNCIONA (flujo completo):
+// ────────────────────────────────────────────────────────────────────────────
+//   1. Este archivo crea un divisor (#preview-resizer) entre la fila superior
+//      (preview + library) y el timeline.
+//   2. Al arrastrar el divisor, cambia la altura de #video-preview-panel.
+//   3. aspectRatio.js tiene un ResizeObserver en #video-preview-panel.
+//   4. El ResizeObserver detecta el cambio de tamaño del panel.
+//   5. Llama applyAspectRatio(currentRatio) que recalcula el tamaño del
+//      .video-preview-container manteniendo la proporción del aspecto.
+//   6. El contenedor se ve más pequeño o más grande pero SIEMPRE completo
+//      y nunca se oculta detrás de la barra de controles.
+//
+// ────────────────────────────────────────────────────────────────────────────
+// ⚠️ REGLA CRÍTICA:
+// ────────────────────────────────────────────────────────────────────────────
+//   Este archivo DEBE cambiar #video-preview-panel.style.height, NO
+//   .video-preview-container.style.height directamente.
+//   Si setea la altura del contenedor directamente, pisará el cálculo de
+//   proporción de aspectRatio.js y el aspecto se romperá al arrastrar.
+//
+// ────────────────────────────────────────────────────────────────────────────
+// IDs Y CLASES QUE USA:
+// ────────────────────────────────────────────────────────────────────────────
+//   - #video-preview-panel: panel del previsualizador (HTML, línea ~204)
+//     Este archivo setea style.height y style.flex al arrastrar
+//   - .video-preview-container: contenedor del video (HTML, línea ~216)
+//     Solo se busca para verificar que existe. NO se modifica su altura aquí.
+//   - #preview-resizer: divisor arrastrable creado dinámicamente por este archivo
+//     Se inserta entre la fila superior y el timeline
+//   - .d-flex.gap-3: contenedor de la fila superior (preview + library)
+//     El resizer se inserta después de este elemento
+//
+// ────────────────────────────────────────────────────────────────────────────
+// INTERACCIÓN CON aspectRatio.js:
+// ────────────────────────────────────────────────────────────────────────────
+//   - Este archivo cambia #video-preview-panel.style.height
+//   - aspectRatio.js observa #video-preview-panel con ResizeObserver
+//   - Al detectar el cambio, aspectRatio.js re-aplica el aspecto al contenedor
+//   - NO hay conflicto: este archivo no toca el contenedor, solo el panel
+//
+// ────────────────────────────────────────────────────────────────────────────
+// RANGOS:
+// ────────────────────────────────────────────────────────────────────────────
+//   - Altura mínima del panel: 200px
+//   - Altura máxima del panel: 1200px
 // ============================================================================
 
 if (document.readyState === 'loading') {

@@ -18,6 +18,39 @@
 //   - Tooltip al pasar el mouse: "Aspecto"
 //   - Ambos botones (#btn-fit-screen y #btn-trim) están SINCRONIZADOS:
 //     comparten currentAspectIndex y actualizan sus labels simultáneamente
+//   - ResizeObserver en #video-preview-panel: detecta cambios de tamaño
+//     (arrastre del resizer, resize de ventana) y re-aplica el aspecto
+//   - El contenedor NUNCA se oculta detrás de la barra de controles:
+//     calcula el tamaño que cabe en ancho Y alto disponible, manteniendo
+//     siempre la proporción del aspecto seleccionado
+//
+// ────────────────────────────────────────────────────────────────────────────
+// REDIMENSIONAMIENTO (cómo funciona):
+// ────────────────────────────────────────────────────────────────────────────
+//   1. previewResizer.js cambia la altura del PANEL (#video-preview-panel)
+//      NO del contenedor directamente.
+//   2. Este archivo tiene un ResizeObserver en #video-preview-panel.
+//   3. Cuando el panel cambia de tamaño, el ResizeObserver dispara
+//      applyAspectRatio(currentRatio) automáticamente.
+//   4. applyAspectRatio calcula el espacio disponible real:
+//      - Ancho disponible = panel.clientWidth - padding
+//      - Alto disponible = panel.clientHeight - header - controles - padding - 8px
+//   5. Calcula dimensiones manteniendo proporción:
+//      - heightByWidth = availWidth * (h/w)
+//      - widthByHeight = availHeight * (w/h)
+//      - Usa el que quepa sin desbordar
+//   6. El contenedor se ve más pequeño o más grande pero SIEMPRE completo
+//   7. También re-aplica al redimensionar la ventana del navegador (window.resize)
+//
+// ────────────────────────────────────────────────────────────────────────────
+// INTERACCIÓN CON previewResizer.js:
+// ────────────────────────────────────────────────────────────────────────────
+//   - previewResizer.js cambia altura de #video-preview-panel (NO del contenedor)
+//   - ResizeObserver de este archivo detecta el cambio y re-aplica aspecto
+//   - previewResizer.js NO debe setear .video-preview-container.style.height
+//     directamente, porque pisaría el cálculo de proporción de este archivo
+//   - Si previewResizer.js vuelve a setear la altura del contenedor directamente,
+//     el aspecto se romperá al arrastrar el resizer
 //
 // ────────────────────────────────────────────────────────────────────────────
 // IDs Y CLASES QUE USA (NO cambiar sin actualizar también el HTML):
@@ -30,6 +63,11 @@
 //     Tooltip: "Aspecto"
 //     ANTES mostraba alert "Funcionalidad en desarrollo" — AHORA controla aspecto
 //   - .video-preview-container: contenedor del video (HTML, línea ~216)
+//     Este archivo setea width, height, marginLeft, marginRight
+//   - #video-preview-panel: panel padre del contenedor (HTML, línea ~204)
+//     ResizeObserver observa este elemento para detectar cambios de tamaño
+//   - .panel-header: header del panel (para calcular alto disponible)
+//   - #preview-controls-host: barra de controles (para calcular alto disponible)
 //   - #video-player: elemento <video> dentro del contenedor (HTML, línea ~217)
 //   - #aspect-context-menu: menú contextual creado dinámicamente por showAspectMenu()
 //
@@ -40,6 +78,7 @@
 //      Cada uno hace: window.ASPECT_RATIOS.push({ label, w, h })
 //   2. Este archivo lee window.ASPECT_RATIOS y espera hasta que tenga datos
 //   3. No depende de ningún otro archivo del editor (videoEditor.js, etc.)
+//   4. previewResizer.js cambia el panel; este archivo observa y re-aplica
 //
 // ────────────────────────────────────────────────────────────────────────────
 // ARCHIVOS DE ASPECTOS (cada uno independiente en /aspectRatios/):
@@ -67,20 +106,35 @@
 //     Este archivo clona los botones para remover listeners previos antes de enlazar
 //
 // ────────────────────────────────────────────────────────────────────────────
-// VARIABLE GLOBAL:
+// ARCHIVOS QUE NO DEBEN SETEAR .video-preview-container.style.height:
+// ────────────────────────────────────────────────────────────────────────────
+//   - previewResizer.js: debe cambiar #video-preview-panel.style.height, NO
+//     .video-preview-container.style.height. Si lo hace, pisará el cálculo de
+//     proporción y el aspecto se romperá al arrastrar.
+//   - Cualquier otro archivo que necesite cambiar el tamaño del contenedor debe
+//     llamar applyAspectRatio() en lugar de setear style.height directamente.
+//
+// ────────────────────────────────────────────────────────────────────────────
+// VARIABLES GLOBALES:
 // ────────────────────────────────────────────────────────────────────────────
 //   - currentAspectIndex: índice actual en window.ASPECT_RATIOS
 //     Por defecto: índice de 16:9 (buscado al inicializar)
 //     Se comparte entre #btn-fit-screen y #btn-trim
+//   - currentRatio: objeto { label, w, h } de la relación actual
+//     Se guarda para re-aplicar al redimensionar (ResizeObserver y window.resize)
+//   - aspectResizeObserver: instancia de ResizeObserver sobre #video-preview-panel
+//     Detecta cambios de tamaño y dispara applyAspectRatio(currentRatio)
 // ============================================================================
 
 // ⚠️ NO RENOMBRAR esta variable. Es usada por ambos botones sincronizados.
 var currentAspectIndex = 0; // Se ajusta a 16:9 después de cargar
 
 // ⚠️ NO RENOMBRAR. Guarda la relación actual para re-aplicar al redimensionar.
+// Es leída por el ResizeObserver y el handler de window.resize.
 var currentRatio = null;
 
 // ⚠️ NO RENOMBRAR. Es el ResizeObserver que detecta cambios de tamaño del panel.
+// Se crea en initAspectRatio() y observa #video-preview-panel.
 var aspectResizeObserver = null;
 
 if (document.readyState === 'loading') {
@@ -108,6 +162,8 @@ if (document.readyState === 'loading') {
 //   6. Clonar #btn-trim para remover listeners previos de videoEditor.js
 //   7. Agregar click (cyclear) + contextmenu (menú) a #btn-trim
 //   8. Aplicar relación inicial
+//   9. Crear ResizeObserver en #video-preview-panel para re-aplicar al redimensionar
+//  10. Registrar handler para window.resize
 // ---------------------------------------------------------------------------
 function initAspectRatio() {
     // ⚠️ #btn-fit-screen está en HTML línea ~208 (barra superior del previsualizador)
@@ -186,8 +242,13 @@ function initAspectRatio() {
     applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
 
     // ⚠️ ResizeObserver: detectar cambios de tamaño del panel del previsualizador
-    // Cuando el usuario arrastra el resizer o cambia el tamaño de la ventana,
-    // re-aplicar el aspecto para que el contenedor se ajuste y nunca se oculte.
+    // Cuando el usuario arrastra el resizer (previewResizer.js) o cambia el tamaño
+    // de la ventana, re-aplicar el aspecto para que el contenedor se ajuste y
+    // nunca se oculte detrás de la barra de controles.
+    //
+    // previewResizer.js cambia #video-preview-panel.style.height → ResizeObserver
+    // detecta el cambio → llama applyAspectRatio(currentRatio) → contenedor se
+    // redimensiona manteniendo la proporción del aspecto seleccionado.
     var panel = document.getElementById('video-preview-panel');
     if (panel && typeof ResizeObserver !== 'undefined') {
         aspectResizeObserver = new ResizeObserver(function() {
