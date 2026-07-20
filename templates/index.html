@@ -314,14 +314,6 @@
                                     <i class="bi bi-download fs-5"></i>
                                 </button>
                             </div>
-                            <div class="d-flex gap-2">
-                                <button class="btn btn-outline-light" id="btn-zoom-in" style="padding: 6px 10px;">
-                                    <i class="bi bi-zoom-in fs-5"></i>
-                                </button>
-                                <button class="btn btn-outline-light" id="btn-zoom-out" style="padding: 6px 10px;">
-                                    <i class="bi bi-zoom-out fs-5"></i>
-                                </button>
-                            </div>
                         </div>
                         <div class="timeline-container" style="min-height: 200px;">
                             <!-- Time ruler -->
@@ -507,6 +499,12 @@
     <script src="{{ url_for('static', filename='js/stickers/emojiJsonImportExport.js') }}"></script>
     <!-- BLINDADO: emojiPanelDraggable.js hace el panel de emojis arrastrable. Archivo independiente. -->
     <script src="{{ url_for('static', filename='js/stickers/emojiPanelDraggable.js') }}"></script>
+    <!-- BLINDADO: emojiScalePlusMinus.js escala con + y - en lugar de S. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/emojiScalePlusMinus.js') }}"></script>
+    <!-- BLINDADO: emojiScalePreserve.js preserva escala al mover overlay. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/emojiScalePreserve.js') }}"></script>
+    <!-- BLINDADO: emojiToolbarScale.js botones + y - en toolbar para escalar emojis. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/stickers/emojiToolbarScale.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/fabMenu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/draggablePanels.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/navigation.js') }}"></script>
