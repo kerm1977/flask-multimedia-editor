@@ -91,6 +91,28 @@ function initAspectRatio() {
         showAspectMenu(e.clientX, e.clientY, newBtn);
     });
 
+    // === Botón #btn-trim (barra de herramientas) — misma función de aspecto ===
+    var trimBtn = document.getElementById('btn-trim');
+    if (trimBtn) {
+        trimBtn.title = 'Aspecto';
+        // Clonar para remover listeners previos de videoEditor.js (alert)
+        var newTrimBtn = trimBtn.cloneNode(true);
+        trimBtn.parentNode.replaceChild(newTrimBtn, trimBtn);
+
+        newTrimBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            currentAspectIndex = (currentAspectIndex + 1) % window.ASPECT_RATIOS.length;
+            applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
+        });
+
+        newTrimBtn.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            e.stopPropagation();
+            showAspectMenu(e.clientX, e.clientY, newTrimBtn);
+        });
+    }
+
     // Aplicar relación inicial
     applyAspectRatio(window.ASPECT_RATIOS[currentAspectIndex]);
 
@@ -131,11 +153,16 @@ function applyAspectRatio(ratio) {
         container.style.marginRight = '';
     }
 
-    // Actualizar label del botón
+    // Actualizar label de ambos botones (#btn-fit-screen y #btn-trim)
     var btn = document.getElementById('btn-fit-screen');
     if (btn) {
         btn.innerHTML = '<i class="bi bi-aspect-ratio"></i> ' + ratio.label;
         btn.title = 'Aspecto: ' + ratio.label;
+    }
+    var trimBtn = document.getElementById('btn-trim');
+    if (trimBtn) {
+        trimBtn.innerHTML = '<i class="bi bi-aspect-ratio"></i> ' + ratio.label;
+        trimBtn.title = 'Aspecto: ' + ratio.label;
     }
 
     console.log('aspectRatio: aplicado', ratio.label);
