@@ -15,10 +15,13 @@
 //
 // ⚠️ INTERACCIÓN CON globalMute.js:
 //   - globalMute.js puede setear TODOS los .track-mute-btn a data-muted=true
+//     (muteAllTracks) o a data-muted=false (unmuteAllTracks)
+//   - Al ACTIVAR mute global: todos los .track-mute-btn → data-muted=true
+//   - Al DESACTIVAR mute global: todos los .track-mute-btn → data-muted=false
 //   - Si el usuario desmutea un track individual, globalMute.js detecta el
-//     cambio y desactiva el mute global automáticamente
+//     cambio y desactiva el mute global automáticamente (sin desmutear todos)
 //   - Ambos archivos comparten data-muted en .track-mute-btn
-//   - NO hay conflicto: globalMute solo escribe cuando globalMuted=true
+//   - NO hay conflicto: globalMute escribe data-muted solo en toggleGlobalMute()
 //
 // Tipos de pista soportados:
 //   - video-track (track 1): controla #video-player.muted

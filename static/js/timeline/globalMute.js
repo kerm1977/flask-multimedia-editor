@@ -11,30 +11,54 @@
 // ────────────────────────────────────────────────────────────────────────────
 //   - Click en #btn-volume-control: silencia/desilencia TODAS las pistas
 //   - Es INDEPENDIENTE de los botones de mute individuales de cada track
-//   - Al ACTIVAR: todas las pistas se silencian + iconos de tracks muestran mute
-//   - Al DESACTIVAR: las pistas vuelven a su estado individual
+//   - Al ACTIVAR: todas las pistas se silencian + iconos de tracks → mute
+//   - Al DESACTIVAR: todas las pistas se desilencian + iconos de tracks → volumen
 //
 // ────────────────────────────────────────────────────────────────────────────
-// SINCRONIZACIÓN CON TRACKS INDIVIDUALES:
+// FUNCIONES PRINCIPALES (NO modificar su comportamiento):
 // ────────────────────────────────────────────────────────────────────────────
-//   1. Al activar mute global:
+//   - toggleGlobalMute(): alterna globalMuted entre true/false
+//       Si true → llama muteAllTracks() (mutea todos los tracks)
+//       Si false → llama unmuteAllTracks() (desmutea todos los tracks)
+//   - muteAllTracks(): setea TODOS los .track-mute-btn a data-muted=true
+//       Iconos cambian a bi-volume-mute rojo
+//       Sincroniza #btn-volume del previsualizador
+//   - unmuteAllTracks(): setea TODOS los .track-mute-btn a data-muted=false
+//       Iconos cambian a bi-volume-up normal
+//       Sincroniza #btn-volume del previsualizador
+//   - updateGlobalMuteButton(isMuted): actualiza icono+tooltip de #btn-volume-control
+//   - globalMuteEnforceLoop(): loop requestAnimationFrame
+//       Detecta si un track fue desmuteado individualmente → desactiva global
+//       Enforce muted=true en todos los elementos mientras globalMuted=true
+//
+// ────────────────────────────────────────────────────────────────────────────
+// SINCRONIZACIÓN CON TRACKS INDIVIDUALES (3 escenarios):
+// ────────────────────────────────────────────────────────────────────────────
+//   1. Al ACTIVAR mute global (click en #btn-volume-control):
+//      - toggleGlobalMute() → globalMuted = true
 //      - muteAllTracks() setea TODOS los .track-mute-btn a data-muted=true
 //      - Los iconos de cada track cambian a bi-volume-mute rojo
-//      - El #btn-volume del previsualizador también se sincroniza
+//      - El #btn-volume del previsualizador también se sincroniza a mute
 //      - El loop enforce muted=true en todos los elementos cada frame
+//      - El botón #btn-volume-control muestra icono de mute rojo
 //
-//   2. Al desmutear un track individual mientras el global está activo:
+//   2. Al DESACTIVAR mute global (click en #btn-volume-control):
+//      - toggleGlobalMute() → globalMuted = false
+//      - unmuteAllTracks() setea TODOS los .track-mute-btn a data-muted=false
+//      - Los iconos de cada track cambian a bi-volume-up normal
+//      - El #btn-volume del previsualizador también se sincroniza a volumen
+//      - El botón #btn-volume-control muestra icono de volumen normal
+//      - trackMute.js toma el control del mute individual normalmente
+//
+//   3. Al desmutear un track individual mientras el global está ACTIVADO:
 //      - El loop (globalMuteEnforceLoop) detecta que un .track-mute-btn
 //        tiene data-muted=false
 //      - AUTOMÁTICAMENTE desactiva el mute global (globalMuted = false)
 //      - El botón #btn-volume-control vuelve a bi-volume-up
 //      - Ese track suena (trackMute.js lo reproduce)
 //      - Los demás tracks quedan muteados (su data-muted sigue en true)
-//
-//   3. Al desactivar mute global (click en botón):
-//      - NO cambia el estado individual de los tracks
-//      - Cada track mantiene el data-muted que tenía
-//      - trackMute.js toma el control del mute individual normalmente
+//      - ⚠️ En este escenario NO se llama unmuteAllTracks() porque el usuario
+//        desmuteó solo un track intencionalmente, no todos
 //
 // ────────────────────────────────────────────────────────────────────────────
 // IDs Y CLASES QUE USA (NO cambiar sin actualizar también el HTML):
@@ -86,10 +110,12 @@
 //   - trackMute.js controla el mute INDIVIDUAL de cada track (.track-mute-btn)
 //   - globalMute.js controla el mute GLOBAL (#btn-volume-control)
 //   - Ambos leen/escriben data-muted en .track-mute-btn (compartido)
-//   - Cuando globalMute activa, setea todos los data-muted=true
-//   - Cuando el usuario desmutea un track (vía trackMute.js), el loop de
-//     globalMute detecta el cambio y desactiva el global automáticamente
-//   - NO hay conflicto porque globalMute solo escribe cuando globalMuted=true
+//   - Cuando globalMute ACTIVA: muteAllTracks() setea todos los data-muted=true
+//   - Cuando globalMute DESACTIVA: unmuteAllTracks() setea todos los data-muted=false
+//   - Cuando el usuario desmutea un track individual (vía trackMute.js) mientras
+//     el global está activo, el loop de globalMute detecta el cambio y desactiva
+//     el global automáticamente (sin llamar unmuteAllTracks)
+//   - NO hay conflicto: globalMute escribe data-muted solo en toggleGlobalMute()
 //
 // ────────────────────────────────────────────────────────────────────────────
 // VARIABLE GLOBAL:
