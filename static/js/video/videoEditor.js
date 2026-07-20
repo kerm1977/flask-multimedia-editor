@@ -93,11 +93,12 @@ function updateTimelinePlayhead(currentTime, duration) {
 //   - 'btn-split': controlado por splitClip.js (dividir clip)
 //   - 'btn-delete': controlado por deleteClip.js (eliminar clip)
 //   - 'btn-speed-control': controlado por playbackSpeed.js (velocidad)
+//   - 'btn-volume-control': controlado por globalMute.js (mute global)
 // Si se vuelven a agregar, mostrarán alert "Funcionalidad en desarrollo"
 // en lugar de su funcionalidad real.
 function setupEditingTools() {
     const tools = [
-        'btn-volume-control', 'btn-add-text', 'btn-add-sticker',
+        'btn-add-text', 'btn-add-sticker',
         'btn-add-filter', 'btn-add-transition', 'btn-add-music',
         'btn-add-voiceover', 'btn-export'
     ];
@@ -112,7 +113,6 @@ function setupEditingTools() {
 
 function handleToolClick(toolId) {
     const toolNames = {
-        'btn-volume-control': 'Control de volumen',
         'btn-add-text': 'Agregar texto',
         'btn-add-sticker': 'Agregar sticker',
         'btn-add-filter': 'Agregar filtro',

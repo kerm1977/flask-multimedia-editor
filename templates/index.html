@@ -287,7 +287,8 @@
                                 <button class="btn btn-outline-light" id="btn-speed-control" title="Velocidad" style="padding: 6px 10px;">
                                     <i class="bi bi-speedometer2 fs-5"></i>
                                 </button>
-                                <button class="btn btn-outline-light" id="btn-volume-control" title="Volumen" style="padding: 6px 10px;">
+                                <!-- ⚠️ BLINDADO: #btn-volume-control controla mute global via globalMute.js. NO agregar a setupEditingTools() en videoEditor.js. -->
+                                <button class="btn btn-outline-light" id="btn-volume-control" title="Mute global" style="padding: 6px 10px;">
                                     <i class="bi bi-volume-up fs-5"></i>
                                 </button>
                                 <button class="btn btn-outline-light" id="btn-add-text" title="Texto" style="padding: 6px 10px;">
@@ -560,6 +561,8 @@
     <script src="{{ url_for('static', filename='js/timeline/audioPlaybackSync.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/trackControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/trackMute.js') }}"></script>
+    <!-- ⚠️ BLINDADO: globalMute.js controla #btn-volume-control (mute global). NO agregar a setupEditingTools() en videoEditor.js. -->
+    <script src="{{ url_for('static', filename='js/timeline/globalMute.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/audioSpectrumVisualization.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/trackVolumeControls.js') }}"></script>
     <script src="{{ url_for('static', filename='js/timeline/timelineClipWaveforms.js') }}"></script>
