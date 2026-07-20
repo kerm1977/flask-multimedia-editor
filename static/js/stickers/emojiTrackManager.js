@@ -1,6 +1,16 @@
 // ============================================================================
+console.log('emojiTrackManager.js: archivo cargado');
 // BLINDADO / NO MODIFICAR SIN AUTORIZACION
 // emojiTrackManager.js - Gestion del track de emojis/stickers en el timeline
+
+// === VARIABLES GLOBALES (declaradas primero para que esten disponibles) ===
+var EMOJI_TRACK_ID = 'emoji-track';
+var EMOJI_CLIP_CLASS = 'emoji-clip';
+var EMOJI_OVERLAY_CLASS = 'emoji-overlay';
+var EMOJI_DEFAULT_DURATION = 5;
+var PIXELS_PER_SECOND = 10;
+var selectedEmojiClip = null;
+var allEmojiClips = [];
 //
 // Archivo INDEPENDIENTE. No modifica emojis.js, stickers.js, ni ningun otro
 // archivo de la aplicacion. Solo expone window.addEmojiToTrack() para que
@@ -39,36 +49,9 @@
 //   - Ningun archivo del timeline (clipDragMove.js, splitClip.js, etc.)
 // ============================================================================
 
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initEmojiTrackManager);
-} else {
-    initEmojiTrackManager();
-}
-
-var EMOJI_TRACK_ID = 'emoji-track';
-var EMOJI_CLIP_CLASS = 'emoji-clip';
-var EMOJI_OVERLAY_CLASS = 'emoji-overlay';
-var EMOJI_DEFAULT_DURATION = 5; // segundos
-var PIXELS_PER_SECOND = 10;
-var selectedEmojiClip = null;
-var allEmojiClips = [];
-
-function initEmojiTrackManager() {
-    // Escuchar atajos de teclado
-    document.addEventListener('keydown', handleEmojiKeyboard);
-
-    // Observar el playhead para mostrar/ocultar overlays
-    observePlayhead();
-
-    console.log('emojiTrackManager inicializado');
-}
-
-// ---------------------------------------------------------------------------
-// window.addEmojiToTrack(emoji, isSticker)
-// ---------------------------------------------------------------------------
-// Funcion publica llamada por emojiStickerPanel.js al hacer doble clic.
-// Crea el track si no existe, agrega el clip y el overlay.
-// ---------------------------------------------------------------------------
+// === DEFINIR window.addEmojiToTrack LO ANTES POSIBLE ===
+// Esto asegura que emojiStickerPanel.js pueda llamarla incluso si el
+// codigo de inicializacion falla.
 window.addEmojiToTrack = function(emoji, isSticker) {
     // Crear el track si no existe
     var track = document.getElementById(EMOJI_TRACK_ID);
@@ -97,6 +80,25 @@ window.addEmojiToTrack = function(emoji, isSticker) {
     console.log('emojiTrackManager: emoji agregado al track', emoji);
 };
 
+console.log('emojiTrackManager.js: window.addEmojiToTrack definido');
+
+// === INICIALIZACION (envuelta en try/catch para no romper la app) ===
+try {
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initEmojiTrackManager);
+    } else {
+        initEmojiTrackManager();
+    }
+} catch(e) {
+    console.error('emojiTrackManager: error en inicializacion:', e);
+}
+
+function initEmojiTrackManager() {
+    document.addEventListener('keydown', handleEmojiKeyboard);
+    observePlayhead();
+    console.log('emojiTrackManager inicializado');
+}
+
 // ---------------------------------------------------------------------------
 // createEmojiTrack()
 // ---------------------------------------------------------------------------
@@ -110,12 +112,14 @@ function createEmojiTrack() {
         return null;
     }
 
-    // Crear la fila del track
+    // Crear la fila del track con la MISMA estructura que video-track y audio-track:
+    // [numBadge 20px] [controls-btns 28px] [label 80px] [track flex-grow-1]
+    // Esto asegura alineacion vertical perfecta con los otros tracks.
     var row = document.createElement('div');
     row.className = 'track-row d-flex align-items-center gap-2';
     row.id = 'emoji-track-row';
 
-    // Badge de numero
+    // 1. Number badge (20px) - igual que timelineMultiTracks.js
     var numBadge = document.createElement('span');
     numBadge.className = 'track-number-badge';
     numBadge.textContent = 'E';
@@ -125,14 +129,71 @@ function createEmojiTrack() {
         'font-size:13px;font-weight:bold;color:#f5a623;' +
         'background:transparent;border:none;';
 
-    // Label del track
+    // 2. Controls container (28px) - igual que trackControls.js
+    // Solo boton de ocultar (no mute, los emojis no tienen audio).
+    // El ancho debe ser igual al de los otros tracks para alinear.
+    var btnContainer = document.createElement('div');
+    btnContainer.className = 'track-controls-btns';
+    btnContainer.style.cssText =
+        'display:flex;flex-direction:column;align-items:center;justify-content:center;' +
+        'gap:4px;flex-shrink:0;width:28px;';
+
+    // Boton ocultar (espaciador superior para alinear con mute de otros tracks)
+    var spacerTop = document.createElement('div');
+    spacerTop.style.cssText = 'width:26px;height:26px;flex-shrink:0;';
+
+    var hideBtn = document.createElement('button');
+    hideBtn.className = 'btn btn-sm track-hide-btn';
+    hideBtn.style.cssText =
+        'padding:2px;width:26px;height:26px;border:none;background:transparent;' +
+        'color:#8899aa;font-size:16px;line-height:1;';
+    hideBtn.innerHTML = '<i class="bi bi-eye"></i>';
+    hideBtn.title = 'Ocultar/Mostrar emojis';
+    hideBtn.dataset.trackId = EMOJI_TRACK_ID;
+    hideBtn.dataset.hidden = 'false';
+
+    hideBtn.addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var isHidden = hideBtn.dataset.hidden === 'true';
+        var newHidden = !isHidden;
+        hideBtn.dataset.hidden = newHidden ? 'true' : 'false';
+        hideBtn.innerHTML = newHidden
+            ? '<i class="bi bi-eye-slash" style="color:#e53e3e;"></i>'
+            : '<i class="bi bi-eye"></i>';
+        var clips = track.querySelectorAll('.' + EMOJI_CLIP_CLASS);
+        clips.forEach(function(clip) {
+            if (newHidden) {
+                clip.style.opacity = '0.2';
+                clip.style.filter = 'grayscale(100%)';
+            } else {
+                clip.style.opacity = '';
+                clip.style.filter = '';
+            }
+        });
+        console.log('emojiTrackManager: hide toggle', newHidden);
+    });
+
+    btnContainer.appendChild(spacerTop);
+    btnContainer.appendChild(hideBtn);
+
+    // 2b. Espaciador de 50px para alinear con el vol-slider-wrap de los otros tracks
+    // Los tracks de video y audio tienen un slider de volumen de 50px aqui.
+    // El track de emojis no necesita volumen, pero necesita el espacio para alinear.
+    var volSpacer = document.createElement('div');
+    volSpacer.className = 'vol-slider-wrap';
+    volSpacer.style.cssText =
+        'display:flex;flex-direction:column;align-items:center;' +
+        'flex-shrink:0;width:50px;height:60px;gap:2px;justify-content:center;';
+
+    // 3. Label del track (80px) - igual que los tracks originales
     var label = document.createElement('div');
     label.className = 'track-label bg-dark rounded p-2 text-center';
     label.style.width = '80px';
     label.style.border = '1px solid #f5a623';
     label.innerHTML = '<i class="bi bi-emoji-smile" style="color:#f5a623;"></i><small class="d-block" style="color:#f5a623;">Emojis</small>';
 
-    // Boton de eliminar track
+    // Boton de eliminar track (igual que timelineMultiTracks.js para tracks extra)
     var removeBtn = document.createElement('button');
     removeBtn.className = 'btn btn-sm btn-outline-danger w-100 mt-1';
     removeBtn.innerHTML = '<i class="bi bi-trash"></i>';
@@ -146,14 +207,18 @@ function createEmojiTrack() {
     });
     label.appendChild(removeBtn);
 
-    // Track element
+    // 4. Track element (flex-grow-1) - igual que los tracks originales
     var track = document.createElement('div');
     track.className = 'track-track flex-grow-1 bg-dark rounded p-2 position-relative';
     track.style.height = '60px';
     track.style.border = '1px solid #f5a623';
     track.id = EMOJI_TRACK_ID;
 
+    // Ensamblar la fila en el mismo orden que los tracks originales:
+    // [numBadge 20px] [controls-btns 28px] [vol-slider-wrap 50px] [label 80px] [track]
     row.appendChild(numBadge);
+    row.appendChild(btnContainer);
+    row.appendChild(volSpacer);
     row.appendChild(label);
     row.appendChild(track);
     tracksContainer.appendChild(row);
@@ -655,21 +720,12 @@ function getEndOfLastEmojiClip(track) {
 // ---------------------------------------------------------------------------
 // showOverlayForClip(clip)
 // ---------------------------------------------------------------------------
-// Muestra el overlay correspondiente a un clip y oculta los demas.
+// BLINDADO: NO muestra el overlay aqui. El overlay solo se muestra cuando
+// el playhead esta sobre el clip (controlado por observePlayhead).
+// Esta funcion solo selecciona visualmente el clip en el timeline.
 // ---------------------------------------------------------------------------
 function showOverlayForClip(clip) {
-    var overlayId = clip.dataset.overlayId;
-    allEmojiClips.forEach(function(c) {
-        var id = c.dataset.overlayId;
-        if (id) {
-            var o = document.getElementById(id);
-            if (o) {
-                if (c === clip) {
-                    o.style.display = '';
-                }
-            }
-        }
-    });
+    // No forzar display aqui. observePlayhead() controla la visibilidad.
 }
 
 // ---------------------------------------------------------------------------
