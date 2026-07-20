@@ -583,6 +583,8 @@
     <script src="{{ url_for('static', filename='js/stickers/stickers.js') }}"></script>
     <!-- BLINDADO: emojiStickerPanel.js controla #btn-add-sticker. NO agregar a setupEditingTools() en videoEditor.js. -->
     <script src="{{ url_for('static', filename='js/stickers/emojiStickerPanel.js') }}"></script>
+    <!-- BLINDADO: emojiTrackManager.js gestiona el track de emojis en el timeline. Debe cargarse despues de emojiStickerPanel.js. No tocar emojis.js ni stickers.js. -->
+    <script src="{{ url_for('static', filename='js/stickers/emojiTrackManager.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryInit.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryUpload.js') }}"></script>
     <script src="{{ url_for('static', filename='js/library/libraryDisplay.js') }}"></script>

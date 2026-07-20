@@ -244,26 +244,20 @@ function renderGrid() {
     });
 }
 
+// ---------------------------------------------------------------------------
+// addToPreview(emoji, isSticker)
+// ---------------------------------------------------------------------------
+// BLINDADO: Esta funcion llama a window.addEmojiToTrack() definida en
+// emojiTrackManager.js. Si emojiTrackManager.js no esta cargado, no hace nada.
+// NO agregar overlays directamente aqui. Toda la logica del track y overlays
+// esta en emojiTrackManager.js.
+// ---------------------------------------------------------------------------
 function addToPreview(emoji, isSticker) {
-    var container = document.querySelector('.video-preview-container');
-    if (!container) {
-        console.error('emojiStickerPanel: no se encontro .video-preview-container');
-        return;
+    if (typeof window.addEmojiToTrack === 'function') {
+        window.addEmojiToTrack(emoji, isSticker);
+    } else {
+        console.warn('emojiStickerPanel: emojiTrackManager.js no cargado. No se puede agregar el emoji.');
     }
-
-    var el = document.createElement('div');
-    el.textContent = emoji;
-    el.style.cssText =
-        'position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);' +
-        'font-size:' + (isSticker ? '60px' : '40px') + ';' +
-        'cursor:move; user-select:none; z-index:100;' +
-        (isSticker ? 'filter:drop-shadow(3px 3px 0 white);' : '');
-    el.dataset.sticker = isSticker ? 'true' : 'false';
-
-    container.appendChild(el);
-    makeDraggable(el);
-
-    console.log('emojiStickerPanel: agregado', isSticker ? 'sticker' : 'emoji', emoji);
 }
 
 function makeDraggable(el) {
