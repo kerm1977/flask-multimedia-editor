@@ -157,9 +157,8 @@ function initGlobalMute() {
 //   - El botón #btn-volume-control muestra icono de mute
 //
 // Al DESACTIVAR (globalMuted = false):
-//   - NO cambia el estado individual de los tracks
-//   - Cada track mantiene el estado que tenía (todos muteados si fueron
-//     muteados por el global, o el que el usuario les ponga después)
+//   - Setea TODOS los .track-mute-btn a data-muted=false
+//   - Actualiza los iconos de cada track para mostrar volumen normal
 //   - El botón #btn-volume-control muestra icono de volumen normal
 // ---------------------------------------------------------------------------
 function toggleGlobalMute() {
@@ -169,6 +168,9 @@ function toggleGlobalMute() {
     if (globalMuted) {
         // Mute TODOS los tracks individualmente para que sus iconos reflejen el mute
         muteAllTracks();
+    } else {
+        // Desmute TODOS los tracks individualmente para que sus iconos reflejen volumen
+        unmuteAllTracks();
     }
 
     console.log('globalMute:', globalMuted ? 'TODAS las pistas silenciadas' : 'mute global desactivado');
@@ -208,6 +210,40 @@ function muteAllTracks() {
     }
 
     console.log('globalMute: todos los tracks muteados');
+}
+
+// ---------------------------------------------------------------------------
+// unmuteAllTracks()
+// ---------------------------------------------------------------------------
+// Setea data-muted=false en TODOS los .track-mute-btn y actualiza sus iconos.
+// Esto hace que los iconos de cada track muestren volumen normal.
+//
+// También sincroniza el #btn-volume del previsualizador (icono de track 1).
+//
+// Elementos que modifica:
+//   - .track-mute-btn (todos): dataset.muted = 'false', innerHTML = icono volumen
+//   - #btn-volume: dataset.muted = 'false', className = 'bi bi-volume-up'
+//
+// ⚠️ Esta función es llamada SOLO desde toggleGlobalMute() cuando se desactiva.
+//    No debe llamarse desde ningún otro lugar.
+// ---------------------------------------------------------------------------
+function unmuteAllTracks() {
+    // Desmutear todos los botones de track individuales
+    var muteBtns = document.querySelectorAll('.track-mute-btn');
+    muteBtns.forEach(function(btn) {
+        btn.dataset.muted = 'false';
+        btn.innerHTML = '<i class="bi bi-volume-up"></i>';
+    });
+
+    // Sincronizar el #btn-volume del previsualizador (es un <i>, no un <button>)
+    var volBtn = document.getElementById('btn-volume');
+    if (volBtn) {
+        volBtn.dataset.muted = 'false';
+        volBtn.className = 'bi bi-volume-up';
+        if (volBtn.style) volBtn.style.color = '';
+    }
+
+    console.log('globalMute: todos los tracks desmuteados');
 }
 
 // ---------------------------------------------------------------------------
