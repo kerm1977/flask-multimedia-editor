@@ -1,17 +1,24 @@
 // ============================================================================
-// ⚠️  ARCHIVO ÚNICO PARA TODO LO RELACIONADO CON MUTE ⚠️
+// ⚠️  ARCHIVO ÚNICO PARA MUTE INDIVIDUAL DE PISTAS ⚠️
 //
-// trackMute.js — Control de mute para todas las pistas (video y audio)
+// trackMute.js — Control de mute INDIVIDUAL para cada pista (video y audio)
 //
-// Este es el ÚNICO archivo que controla el mute. Si mute falla, el problema
-// está aquí. No hay lógica de mute en ningún otro archivo.
+// Este archivo controla el mute INDIVIDUAL de cada pista.
+// El mute GLOBAL está en globalMute.js (botón #btn-volume-control).
 //
 // Funcionalidad:
 //   1. Botón .track-mute-btn en cada pista: toggle mute individual
-//   2. Botón #btn-volume en previsualizador: mute global del video-player
+//   2. Botón #btn-volume en previsualizador: mute del track 1 (video-track)
 //   3. Loop con requestAnimationFrame: enforce mute cada frame
 //      (necesario porque el código blindado fuerza videoPlayer.muted = false
 //       en clips, sobrescribiendo cualquier mute anterior)
+//
+// ⚠️ INTERACCIÓN CON globalMute.js:
+//   - globalMute.js puede setear TODOS los .track-mute-btn a data-muted=true
+//   - Si el usuario desmutea un track individual, globalMute.js detecta el
+//     cambio y desactiva el mute global automáticamente
+//   - Ambos archivos comparten data-muted en .track-mute-btn
+//   - NO hay conflicto: globalMute solo escribe cuando globalMuted=true
 //
 // Tipos de pista soportados:
 //   - video-track (track 1): controla #video-player.muted
@@ -19,8 +26,8 @@
 //   - audio-track, audio-track-2, etc.: pausa/reanuda elementos de audio
 //
 // Dataset:
-//   - .track-mute-btn data-muted = "true" | "false"
-//   - #btn-volume data-muted = "true" | "false"
+//   - .track-mute-btn data-muted = "true" | "false" (compartido con globalMute.js)
+//   - #btn-volume data-muted = "true" | "false" (compartido con globalMute.js)
 // ============================================================================
 
 if (document.readyState === 'loading') {
