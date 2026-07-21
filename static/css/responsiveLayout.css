@@ -52,19 +52,25 @@ body::-webkit-scrollbar {
 }
 
 /* === OVERRIDE CRUCIAL: Sobrescribir estilos inline del HTML === */
-/* La biblioteca ahora esta a la izquierda (movida por libraryCollapse.js).
-   La vista previa ocupa todo el espacio restante. */
+/* La biblioteca es un overlay flotante (libraryCollapse.js).
+   La vista previa SIEMPRE ocupa todo el ancho disponible. */
 
 /* En pantallas grandes (>1200px): layout normal */
 @media (min-width: 1201px) {
     #video-preview-panel {
-        flex: 1 1 auto !important;
-        min-width: 300px !important;
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+    }
+
+    .video-preview-container {
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 400px !important;
     }
 }
 
 /* === PANTALLA MEDIANA (768px - 1200px) === */
-/* Biblioteca colapsable a la izquierda, vista previa ocupa el resto */
 @media (max-width: 1200px) {
     #video-section > .d-flex.gap-3 {
         flex-direction: row !important;
@@ -72,27 +78,30 @@ body::-webkit-scrollbar {
         gap: 6px !important;
     }
 
-    /* Vista previa: ocupa todo el espacio disponible */
     #video-preview-panel {
-        flex: 1 1 auto !important;
-        min-width: 200px !important;
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
         max-width: 100% !important;
     }
 
     .video-preview-container {
-        height: 280px !important;
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 280px !important;
     }
 }
 
-/* A 900px la vista previa se ajusta, biblioteca sigue visible (colapsable) */
+/* A 900px */
 @media (max-width: 900px) {
     #video-preview-panel {
-        flex: 1 1 auto !important;
-        min-width: 180px !important;
+        flex: 1 1 100% !important;
+        min-width: 0 !important;
     }
 
     .video-preview-container {
-        height: 240px !important;
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 220px !important;
     }
 }
 
@@ -117,7 +126,9 @@ body::-webkit-scrollbar {
     }
 
     .video-preview-container {
-        height: 200px !important;
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 200px !important;
     }
 
     /* Biblioteca: todo el ancho cuando se apila verticalmente */
@@ -189,6 +200,8 @@ body::-webkit-scrollbar {
     }
 
     .video-preview-container {
-        height: 160px !important;
+        height: auto !important;
+        aspect-ratio: 16 / 9 !important;
+        max-height: 160px !important;
     }
 }

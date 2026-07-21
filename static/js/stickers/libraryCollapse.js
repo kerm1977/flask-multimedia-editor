@@ -1,28 +1,40 @@
 // ============================================================================
-// BLINDADO / NO MODIFICAR SIN AUTORIZACION
-// libraryCollapse.js - Biblioteca colapsable en el lado izquierdo
+// BLINDADO / PROHIBIDO MODIFICAR SIN AUTORIZACION EXPLICITA
+// ============================================================================
+// libraryCollapse.js - Biblioteca colapsable como overlay flotante
 //
 // Archivo TOTALMENTE INDEPENDIENTE. No modifica sidebarCollapse.js,
 // index.html, videoEditor.js, ni ningun otro archivo.
 //
+// *** PROHIBIDO TOCAR ***
+//   - NO cambiar la logica de ocultar/mostrar la biblioteca
+//   - NO cambiar la posicion (position:absolute, overlay flotante)
+//   - NO cambiar la superposicion sobre la vista previa
+//   - NO cambiar el auto-colapso por mouseleave
+//   - NO cambiar el ancho (LIB_EXPANDED_WIDTH = 335px)
+//   - NO cambiar el boton toggle (solo visible cuando colapsada)
+//   - NO mover el boton dentro de la biblioteca
+//   - TODO DEBE QUEDAR INTEGRO COMO ESTA
+// ============================================================================
+//
 // FUNCIONALIDAD:
-//   - Mueve la biblioteca (#library-panel) al lado izquierdo, despues del
-//     sidebar del editor (#sidebar-panel)
-//   - La biblioteca es colapsable: se contrae hacia la izquierda con un boton
-//   - Un boton toggle (flecha) permite colapsar/expandir
-//   - NO interfiere con el sidebar del editor (sidebarCollapse.js)
-//   - Cuando esta colapsada, sale del flujo (position:absolute, opacity:0,
-//     width:0) para que la vista previa ocupe TODO el ancho
-//   - El boton toggle se mueve al body al colapsar para no heredar opacity:0
-//     y queda visible con position:fixed en el borde izquierdo
-//   - Cuando esta expandida, ocupa 250px en el flujo flex
-//   - La vista previa se expande/comprime automaticamente segun el estado
+//   - La biblioteca (#library-panel) es SIEMPRE un overlay flotante
+//     (position:absolute) que sale desde el lado izquierdo por ENCIMA
+//     de la vista previa.
+//   - La vista previa (#video-preview-panel) NUNCA se mueve ni cambia
+//     de tamano. Siempre ocupa TODO el ancho disponible.
+//   - Al expandir: la biblioteca aparece por encima de la vista previa
+//     desde la izquierda con animacion suave.
+//   - Al colapsar: la biblioteca se oculta hacia la izquierda.
+//   - AUTO-COLAPSO: cuando el mouse sale completamente de la biblioteca,
+//     se colapsa automaticamente.
+//   - NO interfiere con el sidebar del editor (sidebarCollapse.js).
 //
 // ESTADOS:
-//   - Expandida: position:relative, flex:0 0 250px, opacity:1
-//     Boton: position:absolute, right:0, chevron-left, dentro de library
-//   - Colapsada: position:absolute, width:0, opacity:0
-//     Boton: position:fixed, left:0, chevron-right, en body (visible)
+//   - Expandida: position:absolute, left:0, width:335px, opacity:1, zIndex:1051
+//     Boton: en body, opacity:0, NO visible
+//   - Colapsada: position:absolute, left:-335px, width:335px, opacity:0
+//     Boton: position:fixed, left:0, opacity:1, en body (visible)
 //
 // NO TOCAR:
 //   - sidebarCollapse.js: no se modifica
@@ -31,19 +43,19 @@
 // ============================================================================
 
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initLibraryCollapse);
+    document.addEventListener('DOMContentLoaded', function() {
+        setTimeout(initLibraryCollapse, 500);
+    });
 } else {
-    initLibraryCollapse();
+    setTimeout(initLibraryCollapse, 500);
 }
 
-var LIB_EXPANDED_WIDTH = 250;
-var LIB_COLLAPSED_WIDTH = 30;
+var LIB_EXPANDED_WIDTH = 335;
 var _libExpanded = true;
 
 function initLibraryCollapse() {
     function tryInit() {
         var library = document.getElementById('library-panel');
-        var sidebar = document.getElementById('sidebar-panel');
         var videoPreview = document.getElementById('video-preview-panel');
         var topRow = document.querySelector('#video-section > .d-flex.gap-3');
 
@@ -55,75 +67,94 @@ function initLibraryCollapse() {
         if (library.dataset.libCollapseInit === 'true') return;
         library.dataset.libCollapseInit = 'true';
 
-        // 1. Reorganizar el DOM: poner la biblioteca antes que la vista previa
+        // 0. NEUTRALIZAR draggablePanels.js: remover clase draggable-panel
+        //    y botones de colapso/resize que le agregaron, para que no interfiera
+        library.classList.remove('draggable-panel');
+        var oldCollapseBtn = library.querySelector('.collapse-btn');
+        if (oldCollapseBtn) oldCollapseBtn.remove();
+        var oldResizeHandle = library.querySelector('.resize-handle');
+        if (oldResizeHandle) oldResizeHandle.remove();
+        // Remover cursor grab del header
+        var libHeader = library.querySelector('.panel-header');
+        if (libHeader) {
+            libHeader.style.cursor = 'default';
+            // Remover listeners de drag clonando el header
+            var newHeader = libHeader.cloneNode(true);
+            libHeader.parentNode.replaceChild(newHeader, libHeader);
+        }
+
+        // 1. Asegurar que el contenedor superior tenga position:relative
+        //    para que el overlay de la biblioteca se posicione dentro de el
         if (topRow) {
-            topRow.insertBefore(library, videoPreview);
-            // Necesario para que position:absolute de la biblioteca colapsada
-            // se posicione relativo a este contenedor
             topRow.style.position = 'relative';
         }
 
-        // 2. Estilizar la biblioteca como panel lateral izquierdo colapsable
-        //     Usar position:relative cuando expandida, position:absolute cuando colapsada
-        //     para que la vista previa ocupe TODO el ancho al colapsar
+        // 2. La biblioteca es SIEMPRE un overlay flotante (position:absolute)
+        //    NUNCA esta en el flujo flex. La vista previa ocupa TODO el ancho.
         library.style.cssText =
-            'flex: 0 0 ' + LIB_EXPANDED_WIDTH + 'px !important;' +
+            'position: absolute !important;' +
+            'left: 0 !important;' +
+            'top: 0 !important;' +
+            'width: ' + LIB_EXPANDED_WIDTH + 'px !important;' +
             'min-width: ' + LIB_EXPANDED_WIDTH + 'px !important;' +
             'max-width: ' + LIB_EXPANDED_WIDTH + 'px !important;' +
-            'width: ' + LIB_EXPANDED_WIDTH + 'px !important;' +
             'height: 100% !important;' +
-            'transition: width 0.25s ease, max-width 0.25s ease, flex-basis 0.25s ease, opacity 0.25s ease;' +
+            'z-index: 1051 !important;' +
+            'opacity: 1;' +
             'overflow: hidden;' +
-            'position: relative;' +
-            'flex-shrink: 0;';
+            'transition: left 0.3s ease, opacity 0.3s ease;' +
+            'flex: 0 0 auto !important;' +
+            'box-shadow: 4px 0 15px rgba(0,0,0,0.5);';
 
-        // 2b. Forzar la vista previa a ocupar todo el espacio restante
-        videoPreview.style.flex = '1 1 auto';
-        videoPreview.style.minWidth = '200px';
+        // 3. La vista previa SIEMPRE ocupa TODO el ancho, nunca se mueve
+        videoPreview.style.flex = '1 1 100%';
         videoPreview.style.flexGrow = '1';
         videoPreview.style.flexShrink = '1';
-        videoPreview.style.flexBasis = 'auto';
-        videoPreview.style.transition = 'flex 0.25s ease, flex-basis 0.25s ease, margin-left 0.25s ease';
+        videoPreview.style.flexBasis = '100%';
+        videoPreview.style.minWidth = '0';
+        videoPreview.style.maxWidth = '100%';
+        videoPreview.style.marginLeft = '0';
 
-        // 3. Envolver el contenido original en un contenedor
+        // 4. Envolver el contenido original en un contenedor
         var innerWrapper = document.createElement('div');
         innerWrapper.id = 'library-inner-wrapper';
         innerWrapper.style.cssText =
             'width: ' + LIB_EXPANDED_WIDTH + 'px;' +
             'height: 100%;' +
-            'transition: opacity 0.2s ease;' +
             'display: flex;' +
             'flex-direction: column;';
 
-        // Mover todos los hijos de library al innerWrapper
         while (library.firstChild) {
             innerWrapper.appendChild(library.firstChild);
         }
 
-        // 4. Crear boton toggle (flecha)
+        // 5. Crear boton toggle (flecha) - SOLO visible cuando esta colapsada
         var toggleBtn = document.createElement('button');
         toggleBtn.id = 'library-toggle-btn';
         toggleBtn.style.cssText =
-            'position: absolute;' +
+            'position: fixed;' +
             'top: 50%;' +
-            'right: 0;' +
+            'left: 0;' +
             'transform: translateY(-50%);' +
-            'background: rgba(0,0,0,0.5);' +
+            'background: rgba(33,37,41,0.95);' +
             'border: 1px solid #555;' +
-            'border-right: none;' +
-            'border-radius: 4px 0 0 4px;' +
+            'border-left: none;' +
+            'border-radius: 0 4px 4px 0;' +
             'color: white;' +
             'padding: 8px 4px;' +
             'cursor: pointer;' +
-            'z-index: 10;' +
+            'z-index: 1052;' +
             'font-size: 14px;' +
             'width: 50px;' +
             'height: 60px;' +
             'display: flex;' +
             'align-items: center;' +
-            'justify-content: center;';
-        toggleBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
-        toggleBtn.title = 'Colapsar/Expandir biblioteca';
+            'justify-content: center;' +
+            'opacity: 0;' +
+            'pointer-events: none;' +
+            'transition: opacity 0.3s ease;';
+        toggleBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
+        toggleBtn.title = 'Expandir biblioteca';
 
         toggleBtn.onclick = function(e) {
             e.preventDefault();
@@ -131,14 +162,20 @@ function initLibraryCollapse() {
             toggleLibrary();
         };
 
-        // Ensamblar
+        // Ensamblar: el boton va al body, NO dentro de la biblioteca
         library.appendChild(innerWrapper);
-        library.appendChild(toggleBtn);
+        document.body.appendChild(toggleBtn);
+
+        // 6. Auto-colapsar cuando el mouse sale completamente de la biblioteca
+        library.addEventListener('mouseleave', function() {
+            if (_libExpanded) {
+                toggleLibrary();
+            }
+        });
 
         _libExpanded = true;
-        console.log('libraryCollapse: biblioteca movida al lado izquierdo, colapsable');
+        console.log('libraryCollapse: biblioteca como overlay flotante inicializada');
 
-        // Exponer funcion global por si se necesita
         window.toggleLibraryPanel = toggleLibrary;
     }
     tryInit();
@@ -146,93 +183,36 @@ function initLibraryCollapse() {
 
 function toggleLibrary() {
     var library = document.getElementById('library-panel');
-    var innerWrapper = document.getElementById('library-inner-wrapper');
     var toggleBtn = document.getElementById('library-toggle-btn');
-    if (!library || !innerWrapper) return;
-
-    var videoPreview = document.getElementById('video-preview-panel');
+    if (!library) return;
 
     if (_libExpanded) {
-        // Colapsar: biblioteca sale del flujo (position:absolute), 
-        // vista previa se expande a TODO el ancho moviendose a la izquierda
+        // Colapsar: biblioteca se desliza hacia la izquierda y desaparece
         _libExpanded = false;
-        library.style.position = 'absolute';
-        library.style.left = '0';
-        library.style.top = '0';
-        library.style.zIndex = '1051';
-        library.style.flex = '0 0 0 !important';
-        library.style.maxWidth = '0 !important';
-        library.style.width = '0 !important';
-        library.style.minWidth = '0 !important';
+        library.style.left = '-' + LIB_EXPANDED_WIDTH + 'px';
         library.style.opacity = '0';
         library.style.pointerEvents = 'none';
-        innerWrapper.style.opacity = '0';
-        innerWrapper.style.pointerEvents = 'none';
-        // Mover el boton fuera de la biblioteca para que no herede opacity:0
-        if (toggleBtn && toggleBtn.parentNode === library) {
-            document.body.appendChild(toggleBtn);
-        }
-        // Vista previa ocupa TODO el ancho
-        if (videoPreview) {
-            videoPreview.style.flex = '1 1 100%';
-            videoPreview.style.flexGrow = '1';
-            videoPreview.style.flexBasis = '100%';
-            videoPreview.style.marginLeft = '0';
-        }
+
+        // Mostrar boton en el borde izquierdo para re-expandir
         if (toggleBtn) {
             toggleBtn.innerHTML = '<i class="bi bi-chevron-right"></i>';
-            // Mostrar boton flotante para re-expandir
-            toggleBtn.style.position = 'fixed';
-            toggleBtn.style.left = '0';
-            toggleBtn.style.top = '50%';
-            toggleBtn.style.right = 'auto';
-            toggleBtn.style.transform = 'translateY(-50%)';
-            toggleBtn.style.borderRadius = '0 4px 4px 0';
-            toggleBtn.style.borderRight = '1px solid #555';
-            toggleBtn.style.borderLeft = 'none';
-            toggleBtn.style.zIndex = '1052';
             toggleBtn.style.opacity = '1';
             toggleBtn.style.pointerEvents = 'auto';
-            toggleBtn.style.background = 'rgba(33,37,41,0.9)';
         }
-        console.log('libraryCollapse: biblioteca colapsada, vista previa expandida a la izquierda');
+        console.log('libraryCollapse: biblioteca colapsada (overlay oculto)');
     } else {
-        // Expandir: biblioteca vuelve al flujo, vista previa se ajusta
+        // Expandir: biblioteca se desliza desde la izquierda por encima
         _libExpanded = true;
-        library.style.position = 'relative';
-        library.style.left = 'auto';
-        library.style.top = 'auto';
-        library.style.zIndex = 'auto';
-        library.style.flex = '0 0 ' + LIB_EXPANDED_WIDTH + 'px !important';
-        library.style.maxWidth = LIB_EXPANDED_WIDTH + 'px !important';
-        library.style.width = LIB_EXPANDED_WIDTH + 'px !important';
-        library.style.minWidth = LIB_EXPANDED_WIDTH + 'px !important';
+        library.style.left = '0';
         library.style.opacity = '1';
         library.style.pointerEvents = 'auto';
-        innerWrapper.style.opacity = '1';
-        innerWrapper.style.pointerEvents = 'auto';
-        // Devolver el boton dentro de la biblioteca
-        if (toggleBtn && toggleBtn.parentNode !== library) {
-            library.appendChild(toggleBtn);
-        }
-        if (videoPreview) {
-            videoPreview.style.flex = '1 1 auto';
-            videoPreview.style.flexGrow = '1';
-            videoPreview.style.flexBasis = 'auto';
-        }
+
+        // Ocultar boton: no se necesita cuando esta expandida
+        // Se auto-colapsa al sacar el mouse (mouseleave)
         if (toggleBtn) {
-            toggleBtn.innerHTML = '<i class="bi bi-chevron-left"></i>';
-            toggleBtn.style.position = 'absolute';
-            toggleBtn.style.left = 'auto';
-            toggleBtn.style.right = '0';
-            toggleBtn.style.top = '50%';
-            toggleBtn.style.transform = 'translateY(-50%)';
-            toggleBtn.style.borderRadius = '4px 0 0 4px';
-            toggleBtn.style.borderRight = 'none';
-            toggleBtn.style.borderLeft = '1px solid #555';
-            toggleBtn.style.zIndex = '10';
-            toggleBtn.style.background = 'rgba(0,0,0,0.5)';
+            toggleBtn.style.opacity = '0';
+            toggleBtn.style.pointerEvents = 'none';
         }
-        console.log('libraryCollapse: biblioteca expandida');
+        console.log('libraryCollapse: biblioteca expandida (overlay visible)');
     }
 }

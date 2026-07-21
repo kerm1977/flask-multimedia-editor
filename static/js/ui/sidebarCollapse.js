@@ -17,7 +17,7 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 const SIDEBAR_COLLAPSED_WIDTH = '8px';
-const SIDEBAR_EXPANDED_WIDTH = '200px';
+const SIDEBAR_EXPANDED_WIDTH = '280px';
 const SIDEBAR_HOVER_ZONE = 12; // px desde borde izquierdo
 
 function initSidebarCollapse() {
@@ -60,7 +60,7 @@ function initSidebarCollapse() {
         if (isExpanded) return;
         isExpanded = true;
         sidebar.style.width = SIDEBAR_EXPANDED_WIDTH;
-        sidebar.style.minWidth = '180px';
+        sidebar.style.minWidth = '260px';
         innerContent.style.opacity = '1';
         innerContent.style.pointerEvents = 'auto';
     }
