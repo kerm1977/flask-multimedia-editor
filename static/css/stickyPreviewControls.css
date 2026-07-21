@@ -1,0 +1,96 @@
+/* ============================================================================
+   BLINDADO / PROHIBIDO MODIFICAR SIN AUTORIZACION EXPLICITA
+   ============================================================================
+   stickyPreviewControls.css - Barra de controles pegada al #preview-resizer,
+   header pegado al borde superior, video centrado vertical y horizontalmente.
+
+   Archivo TOTALMENTE INDEPENDIENTE. No modifica previewControls.js,
+   previewResizer.js, index.html, ni ningun otro archivo.
+
+   *** PROHIBIDO TOCAR ***
+     - NO cambiar los margenes del header (margin: 0, padding: 4px 8px)
+     - NO cambiar el padding del panel (padding: 0)
+     - NO cambiar el centrado del video (margin: auto, align-items: center)
+     - NO cambiar el flex del header (flex: 0 0 auto, width: 100%)
+     - NO cambiar el flex del video container (flex: 1 1 auto)
+     - NO cambiar align-self: stretch del header
+     - NO cambiar align-items: center del panel
+     - TODO DEBE QUEDAR INTEGRO COMO ESTA
+   ============================================================================
+
+   FUNCIONALIDAD:
+     - La barra de controles (#preview-controls-host) se pega al borde
+       inferior del #video-preview-panel usando flexbox.
+     - El .video-preview-container crece/comprime pero la barra de
+       controles SIEMPRE queda al final del panel.
+     - Al arrastrar el #preview-resizer, la barra se mueve junto con
+       el borde inferior del panel.
+     - El header esta pegado al borde superior del panel (margin: 0).
+     - El video se centra vertical y horizontalmente en el espacio
+       restante debajo del header.
+
+   NO TOCAR:
+     - previewControls.js: no se modifica
+     - previewResizer.js: no se modifica
+     - libraryCollapse.js: no se modifica
+     - index.html: no se modifica
+   ============================================================================ */
+
+/* El panel de vista previa es flex-column.
+   El header arriba, el video llena el resto y se centra. */
+#video-preview-panel.draggable-panel {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    padding: 0 !important;
+}
+
+/* El header pegado al borde superior, sin margen ni padding.
+   Ocupa todo el ancho del panel. */
+#video-preview-panel .panel-header {
+    margin: 0 !important;
+    padding: 4px 8px !important;
+    flex: 0 0 auto !important;
+    width: 100% !important;
+    align-self: stretch !important;
+}
+
+/* El contenedor del video se centra vertical y horizontalmente
+   en el espacio restante del panel (debajo del header) */
+#video-preview-panel .video-preview-container {
+    flex: 1 1 auto !important;
+    min-height: 120px !important;
+    overflow: hidden !important;
+    margin: auto !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+}
+
+/* El video dentro del contenedor centrado */
+#video-preview-panel .video-preview-container video {
+    object-fit: contain !important;
+}
+
+/* La barra de controles y el resizer estan pegados como una sola pieza.
+   stickyControlsToResizer.js mueve #preview-controls-host fuera del panel
+   y lo inserta justo antes de #preview-resizer. */
+#preview-controls-host {
+    flex: 0 0 auto !important;
+    flex-shrink: 0 !important;
+    width: 100% !important;
+}
+
+#preview-controls-host .video-controls-bar {
+    background: rgba(33, 37, 41, 0.98) !important;
+    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.3);
+    border-radius: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+}
+
+/* El resizer es el "pie" de la barra de controles */
+#preview-resizer {
+    margin-top: 0 !important;
+    border-radius: 0 0 3px 3px !important;
+}

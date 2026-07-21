@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     <!-- BLINDADO: responsiveLayout.css layout responsivo, minimo 600px. Archivo independiente. -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/responsiveLayout.css') }}">
+    <!-- BLINDADO: stickyPreviewControls.css barra de controles pegada al scroll. Archivo independiente. -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/stickyPreviewControls.css') }}">
     <style>
         /* Agrandar todos los iconos 12px total */
         .bi { font-size: calc(1em + 12px) !important; }
@@ -525,6 +527,10 @@
     <script src="{{ url_for('static', filename='js/stickers/horizontalWheelScroll.js') }}"></script>
     <!-- BLINDADO: libraryCollapse.js biblioteca colapsable al lado izquierdo. Archivo independiente. -->
     <script src="{{ url_for('static', filename='js/stickers/libraryCollapse.js') }}"></script>
+    <!-- BLINDADO: stickyControlsToResizer.js barra de controles pegada al resizer. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/preview/stickyControlsToResizer.js') }}"></script>
+    <!-- BLINDADO: previewHeaderReorganize.js tiempo centrado + botones con separador. Archivo independiente. -->
+    <script src="{{ url_for('static', filename='js/preview/previewHeaderReorganize.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/fabMenu.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/draggablePanels.js') }}"></script>
     <script src="{{ url_for('static', filename='js/ui/navigation.js') }}"></script>
